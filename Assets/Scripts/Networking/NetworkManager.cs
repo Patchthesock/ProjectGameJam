@@ -51,20 +51,28 @@ public class NetworkManager : MonoBehaviour {
 		int i = 0;
 		int e = 0;
 
+		// Determine how many players are playing and how many are watching.
 		foreach(GameObject player in players)
 		{
 
 			if(player.GetComponent<Player>().isViewing == false)
 				i++;
 
+			if(player.GetComponent<Player>().isViewing == true)
+				e++;
+
 		}
 
-		if((i >= 2 && isViewing == false))
+		// If more than 2 players or more than one view leave current room.
+		if((i >= 2 && isViewing == false) || (e >= 1 && isViewing == true))
 		{
 			PhotonNetwork.LeaveRoom();
-			PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
+
+			if(isViewing == false)
+				PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
 		}
 
+		Debug.Log("i: " + i + " e: " + e);
 		SpawnPlayer ();
 	}
 
