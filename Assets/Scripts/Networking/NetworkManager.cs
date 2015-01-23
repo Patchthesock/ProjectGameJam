@@ -54,7 +54,7 @@ public class NetworkManager : MonoBehaviour {
 		foreach(GameObject player in players)
 		{
 
-			if(player.GetComponent<NetworkManager>().isViewing == false)
+			if(player.GetComponent<Player>().isViewing == false)
 				i++;
 
 		}
@@ -65,17 +65,13 @@ public class NetworkManager : MonoBehaviour {
 			PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
 		}
 
-		Debug.Log("On Scene");
+		SpawnPlayer ();
 	}
 
 	void SpawnPlayer ()
 	{
 		// Only for actually spawning
-		PhotonNetwork.Instantiate("Player",
-		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.position,
-		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.rotation,
-		                          0
-		                          );
+		PhotonNetwork.Instantiate("Player", new Vector3(0,0,0), Quaternion.identity, 0);
 	}
 
 	void OnReceivedRoomListUpdate()

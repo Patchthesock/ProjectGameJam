@@ -32,10 +32,12 @@ public class Player : MonoBehaviour {
 		if (stream.isWriting && pv.isMine)
 		{
 			stream.SendNext(health);
+			stream.SendNext(isViewing);
 		}
 		else 
 		{	
 			this.health = (float)stream.ReceiveNext();
+			this.isViewing = (bool)stream.ReceiveNext();
 		}
 	}
 }
