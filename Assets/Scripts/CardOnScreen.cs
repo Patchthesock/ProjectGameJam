@@ -12,7 +12,7 @@ public class CardOnScreen : MonoBehaviour
 	
 	public bool isSelected {get; set;}
 
-	public string name;
+	public string cardName;
 	
 	Manager manager;
 
@@ -26,7 +26,7 @@ public class CardOnScreen : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		manager = GameObject.Find("Manager").GetComponent<Manager>();
+		manager = GameObject.Find("CardManager").GetComponent<Manager>();
 		isSelected = false;
 	}
 
@@ -35,7 +35,7 @@ public class CardOnScreen : MonoBehaviour
 		attack = cardProps.attack;
 		defence = cardProps.defence;
 		stamina = cardProps.stamina;
-		name = cardProps.name;
+		cardName = cardProps.cardName;
 		GetComponent<Image>().sprite = cardProps.cardImage;
 	}
 	
@@ -48,11 +48,6 @@ public class CardOnScreen : MonoBehaviour
 				manager.selectedCards.Add(cardProps);
 				isSelected = true;
 				selectedImage.enabled = true;
-
-				foreach(var p in manager.selectedCards)
-				{
-					Debug.Log(p.name);
-				}
 			}
 		}
 		else

@@ -6,7 +6,7 @@ public class CardProperties : MonoBehaviour
 {
 	public Sprite cardImage;
 
-	public string name;
+	public string cardName;
 
 	public int attack;
 	public int defence;
