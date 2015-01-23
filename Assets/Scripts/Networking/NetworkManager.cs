@@ -33,7 +33,7 @@ public class NetworkManager : MonoBehaviour {
 	void OnJoinedRoom ()
 	{
 		GameObject[] players = GameObject.FindGameObjectsWithTag("NetworkManager");
-		if(players.Length > 2 && isViewing == false)
+		if(players.Length >= 2 && isViewing == false)
 		{
 			PhotonNetwork.LeaveRoom();
 			PhotonNetwork.CreateRoom( SystemInfo.deviceUniqueIdentifier, roomOptions, TypedLobby.Default);
