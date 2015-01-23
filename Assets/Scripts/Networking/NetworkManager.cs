@@ -47,22 +47,35 @@ public class NetworkManager : MonoBehaviour {
 	void OnJoinedRoom ()
 	{	
 		displayRooms = false;
-		GameObject[] players = GameObject.FindGameObjectsWithTag("NetworkManager");
+		GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
 		int i = 0;
+		int e = 0;
 
 		foreach(GameObject player in players)
 		{
+
 			if(player.GetComponent<NetworkManager>().isViewing == false)
 				i++;
+
 		}
 
-		if(i >= 2 && isViewing == false)
+		if((i >= 2 && isViewing == false))
 		{
 			PhotonNetwork.LeaveRoom();
 			PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
 		}
 
 		Debug.Log("On Scene");
+	}
+
+	void SpawnPlayer()
+	{
+		// Only for actually spawning
+		PhotonNetwork.Instantiate('Player',
+		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.position,
+		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.rotation,
+		                          0
+		                          );
 	}
 
 	void OnReceivedRoomListUpdate()
