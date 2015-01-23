@@ -14,7 +14,7 @@ public class CardOnScreen : MonoBehaviour
 
 	public string cardName;
 	
-	Manager manager;
+	CardManager manager;
 
 	public CardProperties cardProps;
 
@@ -26,7 +26,7 @@ public class CardOnScreen : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		manager = GameObject.Find("CardManager").GetComponent<Manager>();
+		manager = GameObject.Find("CardManager").GetComponent<CardManager>();
 		isSelected = false;
 	}
 

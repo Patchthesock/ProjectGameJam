@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-public class Manager : MonoBehaviour 
+public class CardManager : MonoBehaviour 
 {
 	public List<GameObject> cards;
 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+[RequireComponent(typeof(CardManager))]
 
 public class Player : MonoBehaviour {
 
@@ -17,6 +18,9 @@ public class Player : MonoBehaviour {
 		isViewing = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().isViewing;
 		health = maxHealth;
 		pv = this.GetComponent<PhotonView>();
+
+		if(!isViewing)
+			this.gameObject.GetComponent<CardManager>().enabled = true;
 	}
 
 	// Return Health
