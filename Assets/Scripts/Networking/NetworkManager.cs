@@ -71,7 +71,7 @@ public class NetworkManager : MonoBehaviour {
 	void SpawnPlayer()
 	{
 		// Only for actually spawning
-		PhotonNetwork.Instantiate('Player',
+		PhotonNetwork.Instantiate("Player",
 		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.position,
 		                          GameObject.FindGameObjectWithTag("PlayerSpawnPoint").transform.rotation,
 		                          0

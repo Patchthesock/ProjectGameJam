@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 public class Manager : MonoBehaviour 
 {
-	public List <GameObject> cards;
+	public List<GameObject> cards;
 
-	public List <CardProperties> deck;
-	public List <CardProperties> playedCards;
+	public List<CardProperties> deck;
+	public List<CardProperties> playedCards;
 	public List<CardProperties> selectedCards; // {get; set;}
 
 	// Use this for initialization
@@ -50,6 +50,18 @@ public class Manager : MonoBehaviour
 		else
 		{
 			Debug.Log("Selected less than 3 cards");
+		}
+	}
+
+	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+	{
+		if (stream.isWriting)
+		{         
+			stream.SendNext(cards);
+		}
+		else
+		{         
+			this.cards = (List<GameObject>)stream.ReceiveNext();
 		}
 	}
 }
