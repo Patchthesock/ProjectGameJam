@@ -9,8 +9,10 @@ public class Manager : MonoBehaviour
 
 	public List<CardProperties> deck;
 	public List<CardProperties> playedCards;
-	public List<CardProperties> selectedCards; // {get; set;}
+	public List<CardProperties> selectedCards;
+	public List<CardProperties> currentCards;
 
+	public bool refreshAllCards = true;
 	// Use this for initialization
 	void Start () 
 	{
@@ -27,10 +29,42 @@ public class Manager : MonoBehaviour
 	{
 		foreach(var c in cards)
 		{
-			int cardToUse = Random.Range(0, deck.Count);
-			c.GetComponent<CardOnScreen>().cardProps = deck[cardToUse];
-			c.GetComponent<CardOnScreen>().setCard();
+
+			var cardOnScreen = c.GetComponent<CardOnScreen>();
+			if(refreshAllCards)
+			{
+				if(deck.Count < 5)
+				{
+					deck.AddRange(playedCards);
+					playedCards.Clear();
+				}
+				int cardToUse = Random.Range(0, deck.Count);
+				cardOnScreen.cardProps = deck[cardToUse];
+				currentCards.Add(deck[cardToUse]);
+				deck.RemoveAt(cardToUse);
+				cardOnScreen.setCard();
+			}
+			else
+			{
+				if(deck.Count < 3)
+				{
+					deck.AddRange(playedCards);
+					playedCards.Clear();
+				}
+				if(cardOnScreen.isSelected)
+				{
+					cardOnScreen.isSelected = false;
+					int cardToUse = Random.Range(0, deck.Count);
+					cardOnScreen.cardProps = deck[cardToUse];
+					currentCards.Add(deck[cardToUse]);
+					deck.RemoveAt(cardToUse);
+					cardOnScreen.setCard();
+					c.gameObject.SetActive(true);
+					c.transform.parent.gameObject.SetActive(true);
+				}
+			}
 		}
+		refreshAllCards = false;
 	}
 
 	public void PlayCards ()
@@ -39,13 +73,20 @@ public class Manager : MonoBehaviour
 		{
 			foreach(var c in cards)
 			{
-				if(c.GetComponent<CardOnScreen>().isSelected)
+				var crd = c.GetComponent<CardOnScreen>();
+				if(crd.isSelected)
 				{
+					playedCards.Add(crd.cardProps);
+					currentCards.Remove(crd.cardProps);
+					crd.selectedImage.enabled = false;
 					c.gameObject.SetActive(false);
 					c.transform.parent.gameObject.SetActive(false);
 				}
 			}
 			Debug.Log("send card info");
+
+			selectedCards.Clear();
+			UpdateCards();
 		}
 		else
 		{
