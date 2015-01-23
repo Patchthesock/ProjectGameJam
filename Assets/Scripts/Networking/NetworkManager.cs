@@ -68,7 +68,7 @@ public class NetworkManager : MonoBehaviour {
 		Debug.Log("On Scene");
 	}
 
-	void SpawnPlayer()
+	void SpawnPlayer ()
 	{
 		// Only for actually spawning
 		PhotonNetwork.Instantiate("Player",
