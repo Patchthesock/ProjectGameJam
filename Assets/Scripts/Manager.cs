@@ -12,6 +12,8 @@ public class Manager : MonoBehaviour
 	public List<CardProperties> selectedCards;
 	public List<CardProperties> currentCards;
 
+	public bool characterSelected = false;
+
 	public bool refreshAllCards = true;
 	// Use this for initialization
 	void Start () 
