@@ -5,10 +5,11 @@ using System.Collections;
 
 public class NetworkManager : MonoBehaviour {
 
-	public bool isViewing = true;
-	public string roomName = null;
-
+	public bool isViewing;
+	private RoomInfo[] roomsList;
 	private RoomOptions roomOptions;
+	private string roomName;
+	private bool displayRooms = true;
 	
 	void Awake ()
 	{
@@ -16,18 +17,26 @@ public class NetworkManager : MonoBehaviour {
 		PhotonNetwork.ConnectUsingSettings("1");
 
 		// Set up room requirements.
+		roomName = SystemInfo.deviceUniqueIdentifier;
 		roomOptions = new RoomOptions() { isVisible = true, isOpen = true, 	maxPlayers = 3 };
 
 		// Enable Play control for players.
-		if(isViewing == false)
+		if(!isViewing)
 		{
 			this.gameObject.GetComponent<PlayControl>().enabled = true;
+			this.gameObject.GetComponent<ViewControl>().enabled = false;
+		}
+		else
+		{
+			this.gameObject.GetComponent<PlayControl>().enabled = false;
+			this.gameObject.GetComponent<ViewControl>().enabled = true;
 		}
 	}
 	
 	void OnJoinedLobby ()
 	{
-		PhotonNetwork.JoinRandomRoom();
+		if(!isViewing)
+			PhotonNetwork.JoinRandomRoom();
 	}
 	
 	void OnPhotonRandomJoinFailed ()
@@ -36,7 +45,8 @@ public class NetworkManager : MonoBehaviour {
 	}
 	
 	void OnJoinedRoom ()
-	{
+	{	
+		displayRooms = false;
 		GameObject[] players = GameObject.FindGameObjectsWithTag("NetworkManager");
 		int i = 0;
 
@@ -51,5 +61,30 @@ public class NetworkManager : MonoBehaviour {
 			PhotonNetwork.LeaveRoom();
 			PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
 		}
-	}	
+
+		Debug.Log("On Scene");
+	}
+
+	void OnReceivedRoomListUpdate()
+	{
+		roomsList = PhotonNetwork.GetRoomList();
+	}
+
+	void OnGUI()
+	{
+		if (!PhotonNetwork.connected)
+		{
+			GUILayout.Label(PhotonNetwork.connectionStateDetailed.ToString());
+		}
+			
+		// Join Room
+		if (roomsList != null && isViewing && displayRooms)
+		{
+			for (int i = 0; i < roomsList.Length; i++)
+			{
+				if (GUI.Button(new Rect(100, 250 + (110 * i), 350, 100), "Join " + roomsList[i].name))
+					PhotonNetwork.JoinRoom(roomsList[i].name);
+			}
+		}
+	}
 }
