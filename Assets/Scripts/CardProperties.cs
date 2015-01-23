@@ -2,7 +2,6 @@
 using System.Collections;
 using UnityEngine.UI;
 
-[System.Serializable]
 public class CardProperties : MonoBehaviour
 {
 	public Sprite cardImage;

@@ -10,7 +10,7 @@ public class CardOnScreen : MonoBehaviour
 	
 	public Image selectedImage;
 	
-	private bool isSelected;
+	public bool isSelected {get; set;}
 
 	public string name;
 	
@@ -20,7 +20,7 @@ public class CardOnScreen : MonoBehaviour
 
 	void Awake ()
 	{
-		cardProps = new CardProperties();
+
 	}
 	
 	// Use this for initialization

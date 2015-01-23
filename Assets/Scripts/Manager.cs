@@ -27,9 +27,29 @@ public class Manager : MonoBehaviour
 	{
 		foreach(var c in cards)
 		{
-			int cardToUse = Random.Range(0, deck.Count + 1);
+			int cardToUse = Random.Range(0, deck.Count);
 			c.GetComponent<CardOnScreen>().cardProps = deck[cardToUse];
 			c.GetComponent<CardOnScreen>().setCard();
+		}
+	}
+
+	public void PlayCards ()
+	{
+		if(selectedCards.Count == 3)
+		{
+			foreach(var c in cards)
+			{
+				if(c.GetComponent<CardOnScreen>().isSelected)
+				{
+					c.gameObject.SetActive(false);
+					c.transform.parent.gameObject.SetActive(false);
+				}
+			}
+			Debug.Log("send card info");
+		}
+		else
+		{
+			Debug.Log("Selected less than 3 cards");
 		}
 	}
 }
