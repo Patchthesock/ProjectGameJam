@@ -27,7 +27,7 @@ public class Manager : MonoBehaviour
 	{
 		foreach(var c in cards)
 		{
-			int cardToUse = Random.Range(0, deck.Count + 1);
+			int cardToUse = Random.Range(0, deck.Count);
 			c.GetComponent<CardOnScreen>().cardProps = deck[cardToUse];
 			c.GetComponent<CardOnScreen>().setCard();
 		}

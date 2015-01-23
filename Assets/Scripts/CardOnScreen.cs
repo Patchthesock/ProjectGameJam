@@ -20,7 +20,7 @@ public class CardOnScreen : MonoBehaviour
 
 	void Awake ()
 	{
-		cardProps = new CardProperties();
+
 	}
 	
 	// Use this for initialization
