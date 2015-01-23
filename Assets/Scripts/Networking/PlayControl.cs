@@ -11,15 +11,20 @@ public class PlayControl : MonoBehaviour {
 
 	}
 
+	void RoundControl()
+	{
+
+	}
+
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (stream.isWriting)
 		{
-			stream.SendNext(isPlaying);
+
 		}
 		else 
 		{	
-			isPlaying = (bool)stream.ReceiveNext();
+
 		}
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 [RequireComponent(typeof(PlayControl))]
+[RequireComponent(typeof(ViewControl))]
 
 public class NetworkManager : MonoBehaviour {
 
@@ -14,7 +15,7 @@ public class NetworkManager : MonoBehaviour {
 		// Connect to Photon
 		PhotonNetwork.ConnectUsingSettings("1");
 
-		// Set up room requirements. 
+		// Set up room requirements.
 		roomOptions = new RoomOptions() { isVisible = true, isOpen = true, 	maxPlayers = 3 };
 
 		// Enable Play control for players.
