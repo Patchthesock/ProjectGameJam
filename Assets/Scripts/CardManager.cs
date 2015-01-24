@@ -258,4 +258,9 @@ public class CardManager : MonoBehaviour
 		discardButton.SetActive(true);
 		discardButtonText.text = "Get Cards";
 	}
+
+	public void PassTurn ()
+	{
+
+	}
 }

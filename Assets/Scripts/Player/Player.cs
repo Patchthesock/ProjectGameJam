@@ -5,8 +5,7 @@ public class Player : MonoBehaviour {
 
 	public int maxHealth;
 	public int maxStamina;
-
-	[HideInInspector]
+	
 	public bool isViewing;
 	public int health;
 	public int stamina;
@@ -15,13 +14,19 @@ public class Player : MonoBehaviour {
 
 	private PhotonView pv;
 
-	void Start()
+	void Awake ()
 	{
 		isViewing = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().isViewing;
 		pv = this.GetComponent<PhotonView>();
-
 		if(isViewing && pv.isMine)
 			this.gameObject.GetComponent<CardManager>().enabled = false;
+	}
+
+	void Start()
+	{
+
+
+
 
 		health = maxHealth;
 		stamina = maxStamina;

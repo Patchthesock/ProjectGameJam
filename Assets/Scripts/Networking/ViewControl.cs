@@ -8,14 +8,19 @@ public class ViewControl : MonoBehaviour {
 	public List<string> player1CardsInPlay;
 	public List<string> player2CardsInPlay;
 
-	public List<CardProperties> player1CardProperties;
-	public List<CardProperties> player2CardProperties;
+	public List<CardProperties> player1SelectedCardProperties;
+	public List<CardProperties> player2SelectedCardProperties;
 
-	private GameObject player;
-	private GameObject otherPlayer;
+	public List<CardProperties> player1TableCardProperties;
+	public List<CardProperties> player2TableCardProperties;
+
+	public GameObject player;
+	public GameObject otherPlayer;
 
 	private CardsInPlay myInPlay;
 	private CardsInPlay notMyInPlay;
+
+	private bool hasBeenUpdated = false;
 
 	void Awake () {
 
@@ -26,15 +31,32 @@ public class ViewControl : MonoBehaviour {
 		if(player && otherPlayer)
 		{
 
-			for(int i = 0; i < myInPlay.cardsInPlay.Count; i++)
+			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
-				player1CardProperties.Add(GameObject.Find(myInPlay.cardsInPlay[i]).GetComponent<CardProperties>());
+				hasBeenUpdated = true;
+				for(int i = 0; i < myInPlay.cardsInPlay.Count; i++)
+				{
+					player1SelectedCardProperties.Add(GameObject.Find(myInPlay.cardsInPlay[i]).GetComponent<CardProperties>());
+				}
+				
+				for(int i = 0; i < notMyInPlay.cardsInPlay.Count; i++)
+				{
+					player2SelectedCardProperties.Add(GameObject.Find(notMyInPlay.cardsInPlay[i]).GetComponent<CardProperties>());
+				}
+
+				for(int i = 0; i< myInPlay.cardsOnTable.Count; i++)
+				{
+					player1TableCardProperties.Add(GameObject.Find(myInPlay.cardsOnTable[i]).GetComponent<CardProperties>());
+				}
+
+				for(int i = 0; i < notMyInPlay.cardsOnTable.Count; i++)
+				{
+					player2TableCardProperties.Add(GameObject.Find(notMyInPlay.cardsOnTable[i]).GetComponent<CardProperties>());
+				}
 			}
-
-
-			for(int i = 0; i < notMyInPlay.cardsInPlay.Count; i++)
+			else if(!myInPlay.turnEnded && !notMyInPlay.turnEnded)
 			{
-				player2CardProperties.Add(GameObject.Find(notMyInPlay.cardsInPlay[i]).GetComponent<CardProperties>());
+				hasBeenUpdated = false;
 			}
 
 		}
@@ -77,15 +99,19 @@ public class ViewControl : MonoBehaviour {
 		GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
 		foreach(GameObject myPlayer in players)
 		{
-			if(myPlayer.GetComponent<PhotonView>().isMine)
+			if(myPlayer.GetComponent<CardManager>().enabled == true)
 			{
-				this.player = myPlayer;
-				this.myInPlay = player.GetComponent<CardsInPlay>();
-			}
-			else
-			{
-				this.otherPlayer = myPlayer;
-				this.notMyInPlay = otherPlayer.GetComponent<CardsInPlay>();
+				if(!this.player)
+				{
+					this.player = myPlayer;
+					this.myInPlay = player.GetComponent<CardsInPlay>();
+				}
+				else if(myPlayer != this.player)
+				{
+					this.otherPlayer = myPlayer;
+					this.notMyInPlay = otherPlayer.GetComponent<CardsInPlay>();
+				}
+
 			}
 		}
 	}
