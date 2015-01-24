@@ -13,8 +13,8 @@ public class CardOnScreen : MonoBehaviour
 	public bool isSelected;
 
 	public string cardName;
-	
-	CardManager manager;
+
+	public CardManager manager;
 
 	public CardProperties cardProps;
 
@@ -26,7 +26,7 @@ public class CardOnScreen : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		manager = GameObject.Find("CardManager").GetComponent<CardManager>();
+		//manager = GameObject.Find("CardManager").GetComponent<CardManager>();
 		isSelected = false;
 	}
 

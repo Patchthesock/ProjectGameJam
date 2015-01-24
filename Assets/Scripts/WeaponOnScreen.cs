@@ -11,12 +11,12 @@ public class WeaponOnScreen : MonoBehaviour
 	public bool isSelected {get; set;}
 
 
-	CardManager manager;
+	public CardManager manager;
 
 	// Use this for initialization
 	void Start () 
 	{
-		manager = GameObject.Find("CardManager").GetComponent<CardManager>();
+		//manager = GameObject.Find("CardManager").GetComponent<CardManager>();
 		isSelected = false;
 	}
 
