@@ -10,6 +10,8 @@ public class PlayControl : MonoBehaviour {
 	public GameObject player = null;
 	public GameObject otherPlayer = null;
 	private NetworkManager NM;
+	private PhotonView playerView;
+	private PhotonView otherPlayerView;
 	private PhotonView pv;
 
 	public List<CardProperties> myCards;
@@ -28,7 +30,7 @@ public class PlayControl : MonoBehaviour {
 	void Start ()
 	{
 		NM = this.GetComponent<NetworkManager>();
-
+		pv = GetComponent<PhotonView>();
 	}
 
 	void Update ()
@@ -82,78 +84,107 @@ public class PlayControl : MonoBehaviour {
 		attack = props.attack - notMyPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
-		
-		notMyPlayer.DamageHealth(attack);
-		notMyPlayer.ChangePosition(props.posture);
-		myPlayer.IncreaseTempDefence(props.defence);
-		myPlayer.DamageStamina(props.stamina);
+
+		this.otherPlayerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.otherPlayerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.playerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.playerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//notMyPlayer.DamageHealth(attack);
+		//notMyPlayer.ChangePosition(props.posture);
+		//myPlayer.IncreaseTempDefence(props.defence);
+		//myPlayer.DamageStamina(props.stamina);
 		yield return new WaitForSeconds(1);
 		props = notMyCards[0];
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
 
-		myPlayer.DamageHealth(attack);
-		myPlayer.ChangePosition(props.posture);
-		notMyPlayer.IncreaseTempDefence(props.defence);
-		notMyPlayer.DamageStamina(props.stamina);
+		this.playerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.playerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.otherPlayerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.otherPlayerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//myPlayer.DamageHealth(attack);
+		//myPlayer.ChangePosition(props.posture);
+		//notMyPlayer.IncreaseTempDefence(props.defence);
+		//notMyPlayer.DamageStamina(props.stamina);
 
 		yield return new WaitForSeconds(1);
-		myPlayer.ResetTempDefence();
+		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
+		//myPlayer.ResetTempDefence();
 		props = myCards[1];
 		attack = props.attack - notMyPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
 
-		notMyPlayer.DamageHealth(attack);
-		notMyPlayer.ChangePosition(props.posture);
-		myPlayer.IncreaseTempDefence(props.defence);
-		myPlayer.DamageStamina(props.stamina);
+		this.otherPlayerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.otherPlayerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.playerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.playerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//notMyPlayer.DamageHealth(attack);
+		//notMyPlayer.ChangePosition(props.posture);
+		//myPlayer.IncreaseTempDefence(props.defence);
+		//myPlayer.DamageStamina(props.stamina);
 		yield return new WaitForSeconds(1);
-		notMyPlayer.ResetTempDefence();
+		this.otherPlayerView.RPC("ResetTempDefence", PhotonTargets.All);
+		//notMyPlayer.ResetTempDefence();
+		props = notMyCards[1];
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
 
-		props = notMyCards[1];
-		myPlayer.DamageHealth(attack);
-		myPlayer.ChangePosition(props.posture);
-		notMyPlayer.IncreaseTempDefence(props.defence);
-		notMyPlayer.DamageStamina(props.stamina);
+		this.playerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.playerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.otherPlayerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.otherPlayerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//myPlayer.DamageHealth(attack);
+		//myPlayer.ChangePosition(props.posture);
+		//notMyPlayer.IncreaseTempDefence(props.defence);
+		//notMyPlayer.DamageStamina(props.stamina);
 
 		yield return new WaitForSeconds(1);
+		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
+		//myPlayer.ResetTempDefence();
+		props = myCards[2];
 		attack = props.attack - notMyPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
 
-		myPlayer.ResetTempDefence();
-		props = myCards[2];
-		notMyPlayer.DamageHealth(attack);
-		notMyPlayer.ChangePosition(props.posture);
-		myPlayer.IncreaseTempDefence(props.defence);
-		myPlayer.DamageStamina(props.stamina);
+
+		this.otherPlayerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.otherPlayerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.playerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.playerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//notMyPlayer.DamageHealth(attack);
+		//notMyPlayer.ChangePosition(props.posture);
+		//myPlayer.IncreaseTempDefence(props.defence);
+		//myPlayer.DamageStamina(props.stamina);
 		yield return new WaitForSeconds(1);
-		notMyPlayer.ResetTempDefence();
+		this.otherPlayerView.RPC("ResetTempDefence", PhotonTargets.All);
+		//notMyPlayer.ResetTempDefence();
+
+		props = notMyCards[2];
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
 			attack = 0;
 
-		props = notMyCards[2];
-		myPlayer.DamageHealth(attack);
-		myPlayer.ChangePosition(props.posture);
-		notMyPlayer.IncreaseTempDefence(props.defence);
-		notMyPlayer.DamageStamina(props.stamina);
+		this.playerView.RPC("DamageHealth", PhotonTargets.All,(object)attack);
+		this.playerView.RPC("ChangePosition", PhotonTargets.All,(object)props.posture);
+		this.otherPlayerView.RPC("IncreaseTempDefence", PhotonTargets.All,(object)props.defence);
+		this.otherPlayerView.RPC("DamageStamina", PhotonTargets.All,(object)props.stamina);
+		//myPlayer.DamageHealth(attack);
+		//myPlayer.ChangePosition(props.posture);
+		//notMyPlayer.IncreaseTempDefence(props.defence);
+		//notMyPlayer.DamageStamina(props.stamina);
 
 		notMyCards.Clear();
 		myCards.Clear();
-		myPlayer.ResetTempDefence();
-		notMyPlayer.ResetTempDefence();
+		//myPlayer.ResetTempDefence();
+		//notMyPlayer.ResetTempDefence();
+		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
+		this.otherPlayerView.RPC("ResetTempDefence", PhotonTargets.All);
 
-		pv = player.GetComponent<PhotonView>();
-		this.pv.RPC("CardsInPlayEmpty", PhotonTargets.All);
-
-		pv = otherPlayer.GetComponent<PhotonView>();
-		this.pv.RPC("CardsInPlayEmpty", PhotonTargets.All);
+		this.playerView.RPC("CardsInPlayEmpty", PhotonTargets.All);
+		this.otherPlayerView.RPC("CardsInPlayEmpty", PhotonTargets.All);
 
 		roundStarted = false;
 	}
@@ -168,12 +199,14 @@ public class PlayControl : MonoBehaviour {
 				this.player = myPlayer;
 				this.myInPlay = player.GetComponent<CardsInPlay>();
 				this.myPlayer = player.GetComponent<Player>();
+				playerView = player.GetComponent<PhotonView>();
 			}
 			else
 			{
 				this.otherPlayer = myPlayer;
 				this.notMyInPlay = otherPlayer.GetComponent<CardsInPlay>();
 				this.notMyPlayer = otherPlayer.GetComponent<Player>();
+				otherPlayerView = otherPlayer.GetComponent<PhotonView>();
 			}
 		}
 	}
