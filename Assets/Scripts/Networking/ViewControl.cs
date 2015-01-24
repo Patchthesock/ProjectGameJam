@@ -21,15 +21,20 @@ public class ViewControl : MonoBehaviour {
 	private CardsInPlay notMyInPlay;
 
 	private bool hasBeenUpdated = false;
+	private GameObject fungus;
 
 	void Awake () {
-
+		fungus = GameObject.Find ("FungusScript");
+		fungus.SetActive(false);
 	}
 
 	void Update ()
 	{
 		if(player && otherPlayer)
 		{
+			// turn on fungus
+			fungus.SetActive(true);
+
 
 			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
