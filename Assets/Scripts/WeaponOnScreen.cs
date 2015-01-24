@@ -35,8 +35,8 @@ public class WeaponOnScreen : MonoBehaviour
 			}
 			else
 			{
-				manager.selectedWeapon.GetComponent<CharacterOnScreen>().isSelected = false;
-				manager.selectedWeapon.GetComponent<CharacterOnScreen>().selectedImage.enabled = false;
+				manager.selectedWeapon.GetComponent<WeaponOnScreen>().isSelected = false;
+				manager.selectedWeapon.GetComponent<WeaponOnScreen>().selectedImage.enabled = false;
 				manager.selectedWeapon = this.gameObject;
 			}
 			isSelected = true;
