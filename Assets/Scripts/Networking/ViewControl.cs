@@ -32,10 +32,7 @@ public class ViewControl : MonoBehaviour {
 	{
 		if(player && otherPlayer)
 		{
-			// turn on fungus
 			fungus.SetActive(true);
-
-
 			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
 				hasBeenUpdated = true;
@@ -57,6 +54,18 @@ public class ViewControl : MonoBehaviour {
 				for(int i = 0; i < notMyInPlay.cardsOnTable.Count; i++)
 				{
 					player2TableCardProperties.Add(GameObject.Find(notMyInPlay.cardsOnTable[i]).GetComponent<CardProperties>());
+				}
+
+
+				// If both players have selected there table cards.
+				if(player1TableCardProperties.Count >= 4 && player2TableCardProperties.Count >= 4)
+				{
+					int i = 0;
+					foreach(GameObject player1TableCard in GameObject.FindGameObjectsWithTag("Player1TableCards"))
+					{
+						player1TableCard.GetComponent<CardProperties>() = 
+					}
+					// Start fungus deal sequence.
 				}
 			}
 			else if(!myInPlay.turnEnded && !notMyInPlay.turnEnded)
