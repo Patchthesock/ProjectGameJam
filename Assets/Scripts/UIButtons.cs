@@ -33,4 +33,9 @@ public class UIButtons : MonoBehaviour
 	{
 		manager.DiscardCards();
 	}
+
+	public void PassTurn ()
+	{
+		manager.PassTurn();
+	}
 }
