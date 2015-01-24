@@ -9,6 +9,10 @@ using PhotonHashTable = ExitGames.Client.Photon.Hashtable;
 public class NetworkManager : MonoBehaviour {
 
 	public bool isViewing;
+
+
+	public bool startGame = false;
+	private string connectionSettings = "1.1";
 	private RoomInfo[] roomsList;
 	private RoomOptions roomOptions;
 	private string roomName;
@@ -17,7 +21,7 @@ public class NetworkManager : MonoBehaviour {
 	void Awake ()
 	{
 		// Connect to Photon Network
-		PhotonNetwork.ConnectUsingSettings("1.1");
+		PhotonNetwork.ConnectUsingSettings(connectionSettings);
 
 		// Set up room requirements.
 		roomName = SystemInfo.deviceUniqueIdentifier;
@@ -26,6 +30,7 @@ public class NetworkManager : MonoBehaviour {
 		PhotonHashTable playerHash;
 
 		// Enable Play control for players.
+		// Or View control for non - players.
 		if(!isViewing)
 		{
 			this.gameObject.GetComponent<PlayControl>().enabled = true;
@@ -58,34 +63,22 @@ public class NetworkManager : MonoBehaviour {
 	{	
 		displayRooms = false;
 		SpawnPlayer ();
+
+		CheckStartGame();
 	}
 
 	void OnPhotonPlayerConnected(PhotonPlayer other)
 	{
 		if(PhotonNetwork.isMasterClient)
 		{	
-			PhotonPlayer[] players = PhotonNetwork.playerList;
-			int i = 0;
-
-			foreach(PhotonPlayer player in players)
-			{
-				PhotonHashTable playerHashTable = player.customProperties;
-				bool isWatching = (bool)playerHashTable["Viewer"];
-
-				if(!isWatching)
-				{
-					i++;
-				}
-			}
-			
-			// If more than 2 players or more than one view leave current room.
-			if((i > 2 && this.isViewing == false))
+			// If more than 2 players leave current room.
+			if(PlayerCount() > 2 && this.isViewing == false)
 			{
 				PhotonNetwork.CloseConnection(other);
 			}
-			
-			Debug.Log("Players Playing: " + i);
 		}
+
+		CheckStartGame();
 	}
 	
 	void SpawnPlayer ()
@@ -101,7 +94,12 @@ public class NetworkManager : MonoBehaviour {
 
 	void OnPhotonDissconnected ()
 	{
-		PhotonNetwork.ConnectUsingSettings("1");
+		PhotonNetwork.ConnectUsingSettings(connectionSettings);
+	}
+
+	void OnPhotonPlayerDissconnected ()
+	{
+		Application.LoadLevel("Winning");
 	}
 
 	void OnGUI()
@@ -120,5 +118,30 @@ public class NetworkManager : MonoBehaviour {
 					PhotonNetwork.JoinRoom(roomsList[i].name);
 			}
 		}
+	}
+
+	private void CheckStartGame()
+	{
+		if(PlayerCount() == 2)
+			startGame = true;
+	}
+
+	private int PlayerCount()
+	{
+		PhotonPlayer[] players = PhotonNetwork.playerList;
+		int i = 0;
+		
+		foreach(PhotonPlayer player in players)
+		{
+			PhotonHashTable playerHashTable = player.customProperties;
+			bool isWatching = (bool)playerHashTable["Viewer"];
+			
+			if(!isWatching)
+			{
+				i++;
+			}
+		}
+
+		return i;
 	}
 }

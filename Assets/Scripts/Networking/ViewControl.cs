@@ -3,13 +3,22 @@ using System.Collections;
 
 public class ViewControl : MonoBehaviour {
 
-	// Use this for initialization
+	private GameObject[] players;
+
 	void Start () {
-	
+		InvokeRepeating( "LookForPlayers", 0, 5 );
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
+
+	void Update ()
+	{
+		foreach(GameObject player in players)
+		{
+			// do something
+		}
+	}
+
+	void LookForPlayers ()
+	{
+		players = GameObject.FindGameObjectsWithTag("Player");
 	}
 }
