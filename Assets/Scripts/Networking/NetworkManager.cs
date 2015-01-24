@@ -97,7 +97,7 @@ public class NetworkManager : MonoBehaviour {
 		PhotonNetwork.ConnectUsingSettings(connectionSettings);
 	}
 
-	void OnPhotonPlayerDissconnected ()
+	void OnPhotonPlayerDisconnected ()
 	{
 		Application.LoadLevel("Winning");
 	}

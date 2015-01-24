@@ -87,7 +87,7 @@ public class CardManager : MonoBehaviour
 			cardsCanvas.SetActive(false);
 			weaponSelectCanvas.SetActive(false);
 			armorSelectCanvas.SetActive(false);
-
+			pickToDiscard = false;
 
 		}
 	}
@@ -256,11 +256,13 @@ public class CardManager : MonoBehaviour
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (stream.isWriting && pv.isMine)
-		{         
+		{
+			stream.SendNext(selectedCharacter);
 			stream.SendNext(cards);
 		}
 		else
-		{         
+		{
+			this.selectedCharacter = (GameObject)stream.ReceiveNext();
 			this.cards = (List<GameObject>)stream.ReceiveNext();
 		}
 	}

@@ -6,11 +6,18 @@ public class PlayControl : MonoBehaviour {
 	public bool isPlaying = false;
 	public bool isReady = false;
 
-	public GameObject player;
+	private GameObject player = null;
+	private NetworkManager NM;
 
-	void Awake ()
+	void Start ()
 	{
-		InvokeRepeating("FindPlayer", 0, 0.5f);
+		NM = this.GetComponent<NetworkManager>();
+	}
+
+	void Update ()
+	{
+		if(NM.startGame && !player)
+			FindPlayer();
 	}
 
 	void RoundControl()
@@ -24,7 +31,10 @@ public class PlayControl : MonoBehaviour {
 		foreach(GameObject myPlayer in players)
 		{
 			if(myPlayer.GetComponent<PhotonView>().isMine)
+			{
 				this.player = myPlayer;
+				this.player.GetComponent<CardManager>().enabled = true;
+			}
 		}
 	}
 
