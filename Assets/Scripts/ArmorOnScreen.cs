@@ -35,8 +35,8 @@ public class ArmorOnScreen : MonoBehaviour
 			}
 			else
 			{
-				manager.selectedArmor.GetComponent<CharacterOnScreen>().isSelected = false;
-				manager.selectedArmor.GetComponent<CharacterOnScreen>().selectedImage.enabled = false;
+				manager.selectedArmor.GetComponent<ArmorOnScreen>().isSelected = false;
+				manager.selectedArmor.GetComponent<ArmorOnScreen>().selectedImage.enabled = false;
 				manager.selectedArmor = this.gameObject;
 			}
 			isSelected = true;
