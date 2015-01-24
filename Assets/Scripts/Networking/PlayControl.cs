@@ -10,6 +10,7 @@ public class PlayControl : MonoBehaviour {
 	public GameObject player = null;
 	public GameObject otherPlayer = null;
 	private NetworkManager NM;
+	private PhotonView pv;
 
 	public List<CardProperties> myCards;
 	public List<CardProperties> notMyCards;
@@ -27,6 +28,7 @@ public class PlayControl : MonoBehaviour {
 	void Start ()
 	{
 		NM = this.GetComponent<NetworkManager>();
+
 	}
 
 	void Update ()
@@ -146,12 +148,13 @@ public class PlayControl : MonoBehaviour {
 		myCards.Clear();
 		myPlayer.ResetTempDefence();
 		notMyPlayer.ResetTempDefence();
-		myInPlay.cardsInPlay.Clear();
-		Debug.Log(myInPlay.cardsInPlay.Count);
-		notMyInPlay.cardsInPlay.Clear();
-		Debug.Log(notMyInPlay.cardsInPlay.Count);
-		myInPlay.turnEnded = false;
-		notMyInPlay.turnEnded = false;
+
+		pv = player.GetComponent<PhotonView>();
+		this.pv.RPC("CardsInPlayEmpty", PhotonTargets.All);
+
+		pv = otherPlayer.GetComponent<PhotonView>();
+		this.pv.RPC("CardsInPlayEmpty", PhotonTargets.All);
+
 		roundStarted = false;
 	}
 
@@ -175,15 +178,19 @@ public class PlayControl : MonoBehaviour {
 		}
 	}
 
-	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+
+
+	void OnPhotonSerialize (PhotonStream stream, PhotonMessageInfo info)
 	{
-		if (stream.isWriting)
+		if(stream.isWriting && pv.isMine)
 		{
-
+			stream.SendNext(this.myInPlay);
+			stream.SendNext(this.notMyInPlay);
 		}
-		else 
-		{	
-
+		else
+		{
+			this.myInPlay = (CardsInPlay)stream.ReceiveNext();
+			this.notMyInPlay = (CardsInPlay)stream.ReceiveNext();
 		}
 	}
 }

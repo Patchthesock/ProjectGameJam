@@ -17,6 +17,13 @@ public class CardsInPlay : MonoBehaviour
 	
 	}
 
+	[RPC]
+	void CardsInPlayEmpty ()
+	{
+		cardsInPlay.Clear();
+		turnEnded = false;
+	}
+
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (stream.isWriting)

@@ -10,7 +10,6 @@ public class NetworkManager : MonoBehaviour {
 
 	public bool isViewing;
 
-
 	public bool startGame = false;
 	private string connectionSettings = "1.1";
 	private RoomInfo[] roomsList;
