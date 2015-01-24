@@ -32,10 +32,12 @@ public class CardManager : MonoBehaviour
 	public bool refreshAllCards = true;
 	public bool pickToDiscard = false;
 
+	private PhotonView pv;
+
 	// Use this for initialization
 	void Start () 
 	{
-		//UpdateCards();
+		pv = this.GetComponent<PhotonView>();
 	}
 
 
@@ -197,7 +199,7 @@ public class CardManager : MonoBehaviour
 
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
-		if (stream.isWriting)
+		if (stream.isWriting && pv.isMine)
 		{         
 			stream.SendNext(cards);
 		}

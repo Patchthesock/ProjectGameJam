@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
-[RequireComponent(typeof(CardManager))]
 
 public class Player : MonoBehaviour {
 
 	public int maxHealth;
 	public int maxStamina;
 
+	[HideInInspector]
 	public bool isViewing;
 	private int health;
 	private int stamina;
@@ -17,9 +17,6 @@ public class Player : MonoBehaviour {
 		isViewing = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().isViewing;
 		health = maxHealth;
 		pv = this.GetComponent<PhotonView>();
-
-		if(!isViewing)
-			this.gameObject.GetComponent<CardManager>().enabled = true;
 	}
 
 	// Return Health
