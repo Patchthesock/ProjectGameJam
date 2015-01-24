@@ -13,12 +13,18 @@ public class CardManager : MonoBehaviour
 	public List<CardProperties> currentCards;
 
 	public GameObject characterSelectCanvas;
-	public GameObject weaoponSelectCanvas;
+	public GameObject weaponSelectCanvas;
 	public GameObject armorSelectCanvas;
 	public GameObject cardsCanvas;
 
 	public bool characterSelected = false;
 	public GameObject selectedCharacter;
+
+	public bool weaponSelected = false;
+	public GameObject selectedWeapon;
+
+	public bool armorSelected = false;
+	public GameObject selectedArmor;
 
 	public bool refreshAllCards = true;
 	// Use this for initialization
@@ -73,7 +79,22 @@ public class CardManager : MonoBehaviour
 	{
 		deck.AddRange(selectedCharacter.GetComponent<CharacterOnScreen>().startCards);
 		characterSelectCanvas.SetActive(false);
-		weaoponSelectCanvas.SetActive(true);
+		weaponSelectCanvas.SetActive(true);
+	}
+
+	public void SelectWeapon ()
+	{
+		deck.AddRange(selectedWeapon.GetComponent<WeaponOnScreen>().weaponCards);
+		weaponSelectCanvas.SetActive(false);
+		armorSelectCanvas.SetActive(true);
+	}
+
+	public void SelectArmor ()
+	{
+		deck.AddRange(selectedArmor.GetComponent<ArmorOnScreen>().armorCards);
+		armorSelectCanvas.SetActive(false);
+		cardsCanvas.SetActive(true);
+		UpdateCards();
 	}
 
 	public void PlayCards ()
