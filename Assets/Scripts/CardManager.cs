@@ -5,8 +5,11 @@ using System.Collections.Generic;
 
 public class CardManager : MonoBehaviour 
 {
+	public Button playButton;
+	public Button discardButton;
+	public Text discardButtonText;
+	public Text gameInfoText;
 	public List<GameObject> cards;
-
 	public List<CardProperties> deck;
 	public List<CardProperties> playedCards;
 	public List<CardProperties> selectedCards;
@@ -27,10 +30,39 @@ public class CardManager : MonoBehaviour
 	public GameObject selectedArmor;
 
 	public bool refreshAllCards = true;
+	public bool pickToDiscard = false;
+
 	// Use this for initialization
 	void Start () 
 	{
 		//UpdateCards();
+	}
+
+
+	public void CheckCardNumbers ()
+	{
+		if(!pickToDiscard)
+		{
+			if(selectedCards.Count == 3)
+			{
+				playButton.gameObject.SetActive(true);
+			}
+			else
+			{
+				playButton.gameObject.SetActive(false);
+			}
+		}
+		else
+		{
+			if(selectedCards.Count > 0)
+			{
+				discardButtonText.text = "Discard";
+			}
+			else
+			{
+				discardButtonText.text = "Get Cards";
+			}
+		}
 	}
 
 	public void UpdateCards ()
@@ -114,14 +146,44 @@ public class CardManager : MonoBehaviour
 				}
 			}
 			Debug.Log("send card info");
-
 			selectedCards.Clear();
-			UpdateCards();
+			StartDiscard();
+			//UpdateCards();
 		}
 		else
 		{
 			Debug.Log("Selected less than 3 cards");
 		}
+	}
+
+	public void DiscardCards ()
+	{
+		foreach(var c in cards)
+		{
+			var crd = c.GetComponent<CardOnScreen>();
+			if(crd.isSelected)
+			{
+				playedCards.Add(crd.cardProps);
+				currentCards.Remove(crd.cardProps);
+				crd.selectedImage.enabled = false;
+				c.gameObject.SetActive(false);
+				c.transform.parent.gameObject.SetActive(false);
+			}
+		}
+		selectedCards.Clear();
+		gameInfoText.text = "Pick 3 Cards";
+		discardButton.gameObject.SetActive(false);
+		pickToDiscard = false;
+		UpdateCards();
+	}
+
+	public void StartDiscard ()
+	{
+		gameInfoText.text = "Do you want to discard any cards?";
+		pickToDiscard = true;
+		playButton.gameObject.SetActive(false);
+		discardButton.gameObject.SetActive(true);
+		discardButtonText.text = "Get Cards";
 	}
 
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

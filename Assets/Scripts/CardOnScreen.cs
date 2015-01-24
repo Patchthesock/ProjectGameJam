@@ -43,7 +43,16 @@ public class CardOnScreen : MonoBehaviour
 	{
 		if(!isSelected)
 		{
-			if(manager.selectedCards.Count < 3)
+			if(!manager.pickToDiscard)
+			{
+				if(manager.selectedCards.Count < 3)
+				{
+					manager.selectedCards.Add(cardProps);
+					isSelected = true;
+					selectedImage.enabled = true;
+				}
+			}
+			else
 			{
 				manager.selectedCards.Add(cardProps);
 				isSelected = true;
@@ -56,6 +65,7 @@ public class CardOnScreen : MonoBehaviour
 			isSelected = false;
 			selectedImage.enabled = false;
 		}
-		
+
+		manager.CheckCardNumbers();
 	}
 }
