@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayControl : MonoBehaviour {
 
 	public bool isPlaying = false;
 	public bool isReady = false;
+	public List<CardProperties> cardsInPlay;
+	public bool playerFinishedTurn;
 
 	private GameObject player = null;
 	private NetworkManager NM;
@@ -33,7 +36,6 @@ public class PlayControl : MonoBehaviour {
 			if(myPlayer.GetComponent<PhotonView>().isMine)
 			{
 				this.player = myPlayer;
-				this.player.GetComponent<CardManager>().enabled = true;
 			}
 		}
 	}

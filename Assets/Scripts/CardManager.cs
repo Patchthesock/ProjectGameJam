@@ -15,6 +15,8 @@ public class CardManager : MonoBehaviour
 	public List<CardProperties> selectedCards;
 	public List<CardProperties> currentCards;
 
+	public List<CardProperties> cardsInPlay;
+
 	public GameObject characterSelectCanvas;
 	public GameObject weaponSelectCanvas;
 	public GameObject armorSelectCanvas;
@@ -33,11 +35,13 @@ public class CardManager : MonoBehaviour
 	public bool pickToDiscard = false;
 
 	private PhotonView pv;
+	private PlayControl nm;
 
 	// Use this for initialization
 	void Start () 
 	{
 		pv = this.GetComponent<PhotonView>();
+		nm = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<PlayControl>();
 
 		if(pv.isMine)
 		{
@@ -188,7 +192,6 @@ public class CardManager : MonoBehaviour
 
 	public void PlayCards ()
 	{
-		Debug.Log(cardsCanvas.activeSelf);
 		if(selectedCards.Count == 3)
 		{
 			foreach(var c in cards)
@@ -211,9 +214,13 @@ public class CardManager : MonoBehaviour
 
 						//c.transform.parent.gameObject.SetActive(false);
 					}
-
 				}
+				// set active cards.
+				cardsInPlay.Add(crd.cardProps);
 			}
+
+			// End Turn.
+			nm.finishedTurn = true;
 			selectedCards.Clear();
 			StartDiscard();
 		}
@@ -251,19 +258,5 @@ public class CardManager : MonoBehaviour
 		playButton.SetActive(false);
 		discardButton.SetActive(true);
 		discardButtonText.text = "Get Cards";
-	}
-
-	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-	{
-		if (stream.isWriting && pv.isMine)
-		{
-			stream.SendNext(selectedCharacter);
-			stream.SendNext(cards);
-		}
-		else
-		{
-			this.selectedCharacter = (GameObject)stream.ReceiveNext();
-			this.cards = (List<GameObject>)stream.ReceiveNext();
-		}
 	}
 }
