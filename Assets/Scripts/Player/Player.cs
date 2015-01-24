@@ -24,27 +24,32 @@ public class Player : MonoBehaviour {
 	}
 
 	// Return Health
+	[RPC]
 	public int GetHealth()
 	{
 		return health;
 	}
 
-	// Return Stamina	
+	// Return Stamina
+	[RPC]
 	public int GetStamina ()
 	{
 		return stamina;
 	}
 
+	[RPC]
 	public int GetTempDefence ()
 	{
 		return tempDefence;
 	}
+	[RPC]
 
 	public int GetPosition ()
 	{
 		return position;
 	}
 
+	[RPC]
 	public void ChangePosition(int pos)
 	{
 		position += pos;
@@ -59,28 +64,33 @@ public class Player : MonoBehaviour {
 	}
 
 	// Damage Health
+	[RPC]
 	public void DamageHealth(int damage)
 	{
 		health -= damage;
 	}
 
 	// Damage Stamina
+	[RPC]
 	public void DamageStamina(int damage)
 	{
 		stamina += damage;
 	}
 
 	// Increase Stamina
+	[RPC]
 	public void IncreaseStamina(int inc)
 	{
 		stamina += inc;
 	}
 
+	[RPC]
 	public void IncreaseTempDefence(int inc)
 	{
 		tempDefence += inc;
 	}
 
+	[RPC]
 	public void ResetTempDefence()
 	{
 		tempDefence = 0;
