@@ -24,10 +24,6 @@ public class Player : MonoBehaviour {
 
 	void Start()
 	{
-
-
-
-
 		health = maxHealth;
 		stamina = maxStamina;
 	}
