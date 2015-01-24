@@ -7,7 +7,6 @@ public class Player : MonoBehaviour {
 	public int maxHealth;
 	public int maxStamina;
 
-	[HideInInspector]
 	public bool isViewing;
 	private int health;
 	private int stamina;
