@@ -15,8 +15,6 @@ public class CardManager : MonoBehaviour
 	public List<CardProperties> selectedCards;
 	public List<CardProperties> currentCards;
 
-	public List<CardProperties> cardsInPlay;
-
 	public GameObject characterSelectCanvas;
 	public GameObject weaponSelectCanvas;
 	public GameObject armorSelectCanvas;
@@ -35,13 +33,13 @@ public class CardManager : MonoBehaviour
 	public bool pickToDiscard = false;
 
 	private PhotonView pv;
-	private PlayControl nm;
-
+	private CardsInPlay crdPly;
+	
 	// Use this for initialization
 	void Start () 
 	{
 		pv = this.GetComponent<PhotonView>();
-		nm = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<PlayControl>();
+		crdPly = GetComponent<CardsInPlay>();
 
 		if(pv.isMine)
 		{
@@ -151,7 +149,6 @@ public class CardManager : MonoBehaviour
 				}
 				if(cardOnScreen.isSelected)
 				{
-					Debug.Log("new card");
 					cardOnScreen.isSelected = false;
 					int cardToUse = Random.Range(0, deck.Count);
 					cardOnScreen.cardProps = deck[cardToUse];
@@ -168,7 +165,6 @@ public class CardManager : MonoBehaviour
 
 	public void SelectCharacter ()
 	{
-		Debug.Log(selectedCharacter);
 		deck.AddRange(selectedCharacter.GetComponent<CharacterOnScreen>().startCards);
 		characterSelectCanvas.SetActive(false);
 		weaponSelectCanvas.SetActive(true);
@@ -214,13 +210,14 @@ public class CardManager : MonoBehaviour
 
 						//c.transform.parent.gameObject.SetActive(false);
 					}
+
+					// set active cards
+					crdPly.cardsInPlay.Add(crd.cardProps.name);
 				}
-				// set active cards.
-				cardsInPlay.Add(crd.cardProps);
 			}
 
 			// End Turn.
-			nm.finishedTurn = true;
+			crdPly.turnEnded = true;
 			selectedCards.Clear();
 			StartDiscard();
 		}

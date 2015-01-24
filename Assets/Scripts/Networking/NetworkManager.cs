@@ -47,6 +47,11 @@ public class NetworkManager : MonoBehaviour {
 		// Set Player Prefs.
 		PhotonNetwork.SetPlayerCustomProperties(playerHash);
 	}
+
+	void Start ()
+	{
+		
+	}
 	
 	void OnJoinedLobby ()
 	{
