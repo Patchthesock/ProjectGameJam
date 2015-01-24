@@ -93,6 +93,7 @@ public class CardManager : MonoBehaviour
 				}
 				if(cardOnScreen.isSelected)
 				{
+					Debug.Log("new card");
 					cardOnScreen.isSelected = false;
 					int cardToUse = Random.Range(0, deck.Count);
 					cardOnScreen.cardProps = deck[cardToUse];
@@ -138,17 +139,25 @@ public class CardManager : MonoBehaviour
 				var crd = c.GetComponent<CardOnScreen>();
 				if(crd.isSelected)
 				{
-					playedCards.Add(crd.cardProps);
-					currentCards.Remove(crd.cardProps);
-					crd.selectedImage.enabled = false;
-					c.gameObject.SetActive(false);
-					c.transform.parent.gameObject.SetActive(false);
+					if(crd.cardProps.defenceCard)
+					{
+						crd.GetComponent<Button>().interactable = false;
+						crd.isSelected = false;
+						crd.selectedImage.enabled = false;
+					}
+					else
+					{
+						//playedCards.Add(crd.cardProps);
+						//currentCards.Remove(crd.cardProps);
+						crd.selectedImage.enabled = false;
+						c.gameObject.SetActive(false);
+						c.transform.parent.gameObject.SetActive(false);
+					}
+
 				}
 			}
-			Debug.Log("send card info");
 			selectedCards.Clear();
 			StartDiscard();
-			//UpdateCards();
 		}
 		else
 		{

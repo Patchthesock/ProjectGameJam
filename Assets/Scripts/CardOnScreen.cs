@@ -10,7 +10,7 @@ public class CardOnScreen : MonoBehaviour
 	
 	public Image selectedImage;
 	
-	public bool isSelected {get; set;}
+	public bool isSelected;
 
 	public string cardName;
 	
