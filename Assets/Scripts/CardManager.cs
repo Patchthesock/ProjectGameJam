@@ -214,6 +214,8 @@ public class CardManager : MonoBehaviour
 					// set active cards
 					crdPly.cardsInPlay.Add(crd.cardProps.name);
 				}
+
+				crdPly.cardsOnTable.Add (crd.cardProps.name);
 			}
 
 			// End Turn.

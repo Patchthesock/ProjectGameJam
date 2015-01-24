@@ -6,6 +6,7 @@ public class CardsInPlay : MonoBehaviour
 {
 	public bool turnEnded;
 	public List<string> cardsInPlay;
+	public List<string> cardsOnTable;
 
 	// Use this for initialization
 	void Start () {
@@ -31,12 +32,18 @@ public class CardsInPlay : MonoBehaviour
 			stream.SendNext(turnEnded);
 			string[] cards = cardsInPlay.ToArray();
 			stream.SendNext(cards);
+
+			cards = cardsOnTable.ToArray();
+			stream.SendNext(cards);
 		}
 		else 
 		{	
 			turnEnded = (bool)stream.ReceiveNext();
 			string[] cards = (string[])stream.ReceiveNext();
 			cardsInPlay = new List<string>(cards);
+
+			cards = (string[])stream.ReceiveNext();
+			cardsOnTable = new List<string>(cards);
 		}
 	}
 }

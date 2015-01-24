@@ -18,9 +18,13 @@ public class Player : MonoBehaviour {
 	void Start()
 	{
 		isViewing = GameObject.FindGameObjectWithTag("NetworkManager").GetComponent<NetworkManager>().isViewing;
+		pv = this.GetComponent<PhotonView>();
+
+		if(isViewing && pv.isMine)
+			this.gameObject.GetComponent<CardManager>().enabled = false;
+
 		health = maxHealth;
 		stamina = maxStamina;
-		pv = this.GetComponent<PhotonView>();
 	}
 
 	// Return Health
