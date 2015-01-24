@@ -12,19 +12,19 @@ public class CardManager : MonoBehaviour
 	public List<CardProperties> selectedCards;
 	public List<CardProperties> currentCards;
 
+	public GameObject characterSelectCanvas;
+	public GameObject weaoponSelectCanvas;
+	public GameObject armorSelectCanvas;
+	public GameObject cardsCanvas;
+
 	public bool characterSelected = false;
+	public GameObject selectedCharacter;
 
 	public bool refreshAllCards = true;
 	// Use this for initialization
 	void Start () 
 	{
-		UpdateCards();
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
-		
+		//UpdateCards();
 	}
 
 	public void UpdateCards ()
@@ -67,6 +67,13 @@ public class CardManager : MonoBehaviour
 			}
 		}
 		refreshAllCards = false;
+	}
+
+	public void SelectCharacter ()
+	{
+		deck.AddRange(selectedCharacter.GetComponent<CharacterOnScreen>().startCards);
+		characterSelectCanvas.SetActive(false);
+		weaoponSelectCanvas.SetActive(true);
 	}
 
 	public void PlayCards ()
