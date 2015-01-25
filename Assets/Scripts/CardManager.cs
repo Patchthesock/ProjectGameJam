@@ -7,6 +7,8 @@ public class CardManager : MonoBehaviour
 {
 	public GameObject playButton;
 	public GameObject discardButton;
+	public GameObject passButton;
+	public GameObject waitText;
 	public Text discardButtonText;
 	public Text gameInfoText;
 	public List<GameObject> cards;
@@ -31,6 +33,7 @@ public class CardManager : MonoBehaviour
 
 	public bool refreshAllCards = true;
 	public bool pickToDiscard = false;
+	public bool hasToWait = false;
 
 	private PhotonView pv;
 	private CardsInPlay crdPly;
@@ -50,6 +53,8 @@ public class CardManager : MonoBehaviour
 			cards.Add(GameObject.Find("Card5"));
 			playButton = GameObject.Find("PlayButton");
 			discardButton = GameObject.Find("DiscardButton");
+			passButton = GameObject.Find("PassButton");
+			waitText = GameObject.Find("WaitingText");
 			characterSelectCanvas = GameObject.Find("CharacterSelect");
 			weaponSelectCanvas = GameObject.Find("WeaponSelect");
 			armorSelectCanvas = GameObject.Find("ArmorSelect");
@@ -90,7 +95,34 @@ public class CardManager : MonoBehaviour
 			weaponSelectCanvas.SetActive(false);
 			armorSelectCanvas.SetActive(false);
 			pickToDiscard = false;
+			waitText.SetActive(false);
+		}
+	}
 
+	void Update ()
+	{
+		if(pv.isMine)
+		{
+			if(crdPly)
+			{
+				if(crdPly.turnEnded && !hasToWait)
+				{
+					hasToWait = true;
+					cardsCanvas.GetComponent<GraphicRaycaster>().enabled = false;
+					waitText.SetActive(true);
+					if(passButton.activeSelf)
+					{
+						passButton.SetActive(false);
+					}
+				}
+				else if(!crdPly.turnEnded && hasToWait)
+				{
+					hasToWait = false;
+					cardsCanvas.GetComponent<GraphicRaycaster>().enabled = true;
+					waitText.SetActive(true);
+					StartDiscard();
+				}
+			}
 		}
 	}
 
@@ -221,7 +253,7 @@ public class CardManager : MonoBehaviour
 			// End Turn.
 			crdPly.turnEnded = true;
 			selectedCards.Clear();
-			StartDiscard();
+			//StartDiscard();
 		}
 		else
 		{
@@ -250,8 +282,7 @@ public class CardManager : MonoBehaviour
 		gameInfoText.text = "Pick 3 Cards";
 		discardButton.SetActive(false);
 		pickToDiscard = false;
-
-		// 
+		passButton.SetActive(true); 
 
 		UpdateCards();
 	}
