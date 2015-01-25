@@ -22,10 +22,14 @@ public class ViewControl : MonoBehaviour {
 
 	private bool hasBeenUpdated = false;
 	private GameObject fungus;
+	private GameObject canvas;
 
 	void Awake () {
 		fungus = GameObject.Find ("FungusScript");
 		fungus.SetActive(false);
+
+		canvas = GameObject.Find ("Canvas");
+		canvas.SetActive(false);
 	}
 
 	void Update ()
@@ -33,6 +37,7 @@ public class ViewControl : MonoBehaviour {
 		if(player && otherPlayer)
 		{
 			fungus.SetActive(true);
+			canvas.SetActive(true);
 			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
 				hasBeenUpdated = true;
