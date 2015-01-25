@@ -24,6 +24,7 @@ public class CardsInPlay : MonoBehaviour
 	void CardsInPlayEmpty ()
 	{
 		cardsInPlay.Clear();
+		cardsOnTable.Clear();
 		turnEnded = false;
 	}
 

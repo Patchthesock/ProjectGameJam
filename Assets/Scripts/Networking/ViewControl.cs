@@ -35,6 +35,7 @@ public class ViewControl : MonoBehaviour {
 	//private GameObject fungus;
 	private GameObject canvas;
 	private bool first = true;
+	private bool firstDeal = true;
 	private bool startedCards;
 
 	private bool roundStarted = false;
@@ -73,12 +74,29 @@ public class ViewControl : MonoBehaviour {
 			if(myInPlay.hasCardsOnScreen && notMyInPlay.hasCardsOnScreen && !startedCards)
 			{
 				Debug.Log("dealing cards");
-				startedCards = true;
-				sequenceScript.ExecuteSequence("TurnP1C1");
+				if(firstDeal)
+				{
+					startedCards = true;
+					firstDeal = false;
+					sequenceScript.ExecuteSequence("TurnP1C1");
+				}
+				else
+				{
+					startedCards = true;
+					StartCoroutine(Redeal());
+				}
+
 			}
 
 			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
+				player1SelectedCardProperties = new List<CardProperties>();
+				player2SelectedCardProperties = new List<CardProperties>();
+				player1TableCardProperties = new List<CardProperties>();
+				player2TableCardProperties = new List<CardProperties>();
+				player1CardsInPlay = new List<string>();
+				player2CardsInPlay = new List<string>();
+
 				hasBeenUpdated = true;
 				for(int i = 0; i < myInPlay.cardsInPlay.Count; i++)
 				{
@@ -153,19 +171,36 @@ public class ViewControl : MonoBehaviour {
 					// Start fungus deal sequence.
 
 				}
-
-				StartCoroutine(PlayCard());
 			}
-			else if(!myInPlay.turnEnded && !notMyInPlay.turnEnded)
-			{
-				hasBeenUpdated = false;
-			}
-
 		}
 		else
 		{
 			FindPlayer();
 		}
+
+		if(!roundStarted && hasBeenUpdated && myInPlay.turnEnded && notMyInPlay.turnEnded)
+		{
+			roundStarted = true;
+			StartCoroutine(PlayCard());
+		}
+	}
+
+	IEnumerator Redeal ()
+	{
+		Debug.Log("redeal"); 
+		yield return new WaitForSeconds(1);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[0]);
+		yield return new WaitForSeconds(2);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[1]);
+		yield return new WaitForSeconds(2);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[2]);
+		yield return new WaitForSeconds(2);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[3]);
+		yield return new WaitForSeconds(2);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[4]);
+		yield return new WaitForSeconds(2);
+		sequenceScript.ExecuteSequence("TurnSingle" + playedCardsNames[5]);
+		yield return new WaitForSeconds(2);
 	}
 
 	IEnumerator PlayCard ()
@@ -178,7 +213,7 @@ public class ViewControl : MonoBehaviour {
 		yield return new WaitForSeconds(1);
 		props = player1SelectedCardProperties[0];
 
-		cardName = "P2C" + myInPlay.callOrder[0];
+		cardName = "P1C" + myInPlay.callOrder[0];
 		playedCardsNames.Add(cardName);
 		sequenceScript.ExecuteSequence("PlayP1C" + myInPlay.callOrder[0]);
 
@@ -300,7 +335,7 @@ public class ViewControl : MonoBehaviour {
 		//myPlayer.ChangePosition(props.posture);
 		//notMyPlayer.IncreaseTempDefence(props.defence);
 		//notMyPlayer.DamageStamina(props.stamina);
-		yield return new WaitForSeconds(5);
+		yield return new WaitForSeconds(10);
 
 		foreach(var c in playedCardsNames)
 		{
@@ -319,8 +354,28 @@ public class ViewControl : MonoBehaviour {
 		
 		this.playerView.RPC("CardsInPlayEmpty", PhotonTargets.All);
 		this.otherPlayerView.RPC("CardsInPlayEmpty", PhotonTargets.All);
-		
-		roundStarted = false;
+
+		StartCoroutine(WaitForReset());
+	}
+
+	IEnumerator WaitForReset ()
+	{
+		yield return new WaitForSeconds(1);
+		if(myPlayer.health < 1)
+		{
+			sequenceScript.ExecuteSequence("MadWillyWin");
+		}
+		else if(notMyPlayer.health < 1)
+		{
+			sequenceScript.ExecuteSequence("BigAntoWin");
+		}
+		else
+		{
+			roundStarted = false;
+			hasBeenUpdated = false;
+			startedCards = false;
+		}
+
 	}
 
 	/*private bool PlayerTurnEnded ( GameObject player )
