@@ -22,6 +22,9 @@ public class CardManager : MonoBehaviour
 	public GameObject armorSelectCanvas;
 	public GameObject cardsCanvas;
 
+	public GameObject character1;
+	public GameObject character2;
+
 	public bool characterSelected = false;
 	public GameObject selectedCharacter;
 
@@ -51,6 +54,10 @@ public class CardManager : MonoBehaviour
 			cards.Add(GameObject.Find("Card3"));
 			cards.Add(GameObject.Find("Card4"));
 			cards.Add(GameObject.Find("Card5"));
+
+			character1 = GameObject.Find("Char1");
+			character2 = GameObject.Find("Char2");
+
 			playButton = GameObject.Find("PlayButton");
 			discardButton = GameObject.Find("DiscardButton");
 			passButton = GameObject.Find("PassButton");
@@ -99,6 +106,40 @@ public class CardManager : MonoBehaviour
 		}
 	}
 
+	public void SetPlayer1 ()
+	{
+		StartCoroutine(SetChar1());
+	}
+
+	public void SetPlayer2 ()
+	{
+		StartCoroutine(SetChar2());
+	}
+
+	IEnumerator SetChar1 ()
+	{
+		Debug.Log("Set character 1");
+		yield return new WaitForSeconds(0.1f);
+		if(pv.isMine)
+		{
+			characterSelected  = true;
+			character2.SetActive(false);
+			deck.AddRange(character1.GetComponent<CharacterOnScreen>().startCards);
+		}
+	}
+
+	IEnumerator SetChar2 ()
+	{
+		Debug.Log("Set character 2");
+		yield return new WaitForSeconds(0.1f);
+		if(pv.isMine)
+		{
+			characterSelected = true;
+			character1.SetActive(false);
+			deck.AddRange(character2.GetComponent<CharacterOnScreen>().startCards);
+		}
+	}
+
 	void Update ()
 	{
 		if(pv.isMine)
@@ -110,16 +151,15 @@ public class CardManager : MonoBehaviour
 					hasToWait = true;
 					cardsCanvas.GetComponent<GraphicRaycaster>().enabled = false;
 					waitText.SetActive(true);
-					if(passButton.activeSelf)
-					{
-						passButton.SetActive(false);
-					}
+					passButton.SetActive(false);
+					playButton.SetActive(false);
+
 				}
 				else if(!crdPly.turnEnded && hasToWait)
 				{
 					hasToWait = false;
 					cardsCanvas.GetComponent<GraphicRaycaster>().enabled = true;
-					waitText.SetActive(true);
+					waitText.SetActive(false);
 					StartDiscard();
 				}
 			}
@@ -197,7 +237,6 @@ public class CardManager : MonoBehaviour
 
 	public void SelectCharacter ()
 	{
-		deck.AddRange(selectedCharacter.GetComponent<CharacterOnScreen>().startCards);
 		characterSelectCanvas.SetActive(false);
 		weaponSelectCanvas.SetActive(true);
 

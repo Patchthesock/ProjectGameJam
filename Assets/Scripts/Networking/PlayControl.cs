@@ -24,6 +24,7 @@ public class PlayControl : MonoBehaviour {
 	private Player notMyPlayer;
 
 	private bool thisPlayerStart = true;
+	private bool hasCharacters = false;
 
 	public bool roundStarted;
 
@@ -51,6 +52,13 @@ public class PlayControl : MonoBehaviour {
 					RoundControl();
 				}
 			}
+		}
+
+		if(player && otherPlayer && !hasCharacters)
+		{
+			hasCharacters = true;
+			player.GetComponent<CardManager>().SetPlayer1();
+			otherPlayer.GetComponent<CardManager>().SetPlayer2();
 		}
 	}
 
