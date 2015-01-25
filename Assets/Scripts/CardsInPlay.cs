@@ -5,8 +5,10 @@ using System.Collections.Generic;
 public class CardsInPlay : MonoBehaviour 
 {
 	public bool turnEnded;
+	public bool hasCardsOnScreen;
 	public List<string> cardsInPlay;
 	public List<string> cardsOnTable;
+	public List<int> callOrder;
 
 	// Use this for initialization
 	void Start () {
@@ -35,6 +37,9 @@ public class CardsInPlay : MonoBehaviour
 
 			cards = cardsOnTable.ToArray();
 			stream.SendNext(cards);
+			stream.SendNext(hasCardsOnScreen);
+			int[] order = callOrder.ToArray();
+			stream.SendNext(order);
 		}
 		else 
 		{	
@@ -44,6 +49,9 @@ public class CardsInPlay : MonoBehaviour
 
 			cards = (string[])stream.ReceiveNext();
 			cardsOnTable = new List<string>(cards);
+			hasCardsOnScreen = (bool)stream.ReceiveNext();
+			int[] order = (int[])stream.ReceiveNext();
+			callOrder = new List<int>(order);
 		}
 	}
 }

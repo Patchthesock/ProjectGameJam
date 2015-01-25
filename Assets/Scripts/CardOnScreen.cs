@@ -9,6 +9,8 @@ public class CardOnScreen : MonoBehaviour
 	public int stamina;
 	
 	public Image selectedImage;
+
+	public int order;
 	
 	public bool isSelected;
 
@@ -48,6 +50,7 @@ public class CardOnScreen : MonoBehaviour
 				if(manager.selectedCards.Count < 3)
 				{
 					manager.selectedCards.Add(cardProps);
+					manager.cardCallOrder.Add(order);
 					isSelected = true;
 					selectedImage.enabled = true;
 				}
@@ -55,6 +58,7 @@ public class CardOnScreen : MonoBehaviour
 			else
 			{
 				manager.selectedCards.Add(cardProps);
+				manager.cardCallOrder.Add(order);
 				isSelected = true;
 				selectedImage.enabled = true;
 			}
@@ -62,6 +66,7 @@ public class CardOnScreen : MonoBehaviour
 		else
 		{
 			manager.selectedCards.Remove(cardProps);
+			manager.cardCallOrder.Remove(order);
 			isSelected = false;
 			selectedImage.enabled = false;
 		}

@@ -40,6 +40,8 @@ public class CardManager : MonoBehaviour
 
 	private PhotonView pv;
 	private CardsInPlay crdPly;
+
+	public List<int> cardCallOrder;
 	
 	// Use this for initialization
 	void Start () 
@@ -251,6 +253,7 @@ public class CardManager : MonoBehaviour
 
 	public void SelectArmor ()
 	{
+		crdPly.hasCardsOnScreen = true;
 		deck.AddRange(selectedArmor.GetComponent<ArmorOnScreen>().armorCards);
 		armorSelectCanvas.SetActive(false);
 		cardsCanvas.SetActive(true);
@@ -288,7 +291,7 @@ public class CardManager : MonoBehaviour
 
 				crdPly.cardsOnTable.Add (crd.cardProps.name);
 			}
-
+			crdPly.callOrder = new List<int>(cardCallOrder);
 			// End Turn.
 			crdPly.turnEnded = true;
 			selectedCards.Clear();
