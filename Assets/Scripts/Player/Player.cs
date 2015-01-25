@@ -24,10 +24,6 @@ public class Player : MonoBehaviour {
 
 	void Start()
 	{
-
-
-
-
 		health = maxHealth;
 		stamina = maxStamina;
 	}
@@ -51,8 +47,8 @@ public class Player : MonoBehaviour {
 	{
 		return tempDefence;
 	}
-	[RPC]
 
+	[RPC]
 	public int GetPosition ()
 	{
 		return position;
@@ -91,6 +87,9 @@ public class Player : MonoBehaviour {
 	public void IncreaseStamina(int inc)
 	{
 		stamina += inc;
+
+		if(stamina > maxStamina)
+			stamina = maxStamina;
 	}
 
 	[RPC]

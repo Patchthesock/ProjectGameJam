@@ -52,8 +52,6 @@ public class PlayControl : MonoBehaviour {
 				}
 			}
 		}
-
-
 	}
 
 	void RoundControl()

@@ -241,12 +241,18 @@ public class CardManager : MonoBehaviour
 				crd.selectedImage.enabled = false;
 				c.gameObject.SetActive(false);
 				c.transform.parent.gameObject.SetActive(false);
+
+				// Increase Stamina by 3 for each card discarded.
+				pv.RPC("IncreaseStamina", PhotonTargets.All, (object)3);
 			}
 		}
 		selectedCards.Clear();
 		gameInfoText.text = "Pick 3 Cards";
 		discardButton.SetActive(false);
 		pickToDiscard = false;
+
+		// 
+
 		UpdateCards();
 	}
 
