@@ -5,6 +5,9 @@ public class Player : MonoBehaviour {
 
 	public int maxHealth;
 	public int maxStamina;
+	public int maxPos = 2;
+	public int minPos = -2;
+	public int maxTempDef = 10;
 	
 	public bool isViewing;
 	public int health;
