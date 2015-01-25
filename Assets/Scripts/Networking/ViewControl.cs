@@ -25,7 +25,7 @@ public class ViewControl : MonoBehaviour {
 	private GameObject canvas;
 	private bool first = true;
 
-	void Awake () {
+	void Start () {
 		fungus = GameObject.Find ("FungusScript");
 		fungus.SetActive(false);
 
