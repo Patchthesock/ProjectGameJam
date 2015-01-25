@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class CardsInPlay : MonoBehaviour 
 {
 	public bool turnEnded;
-	public int playerNumber;
 	public List<string> cardsInPlay;
 	public List<string> cardsOnTable;
 
@@ -36,8 +35,6 @@ public class CardsInPlay : MonoBehaviour
 
 			cards = cardsOnTable.ToArray();
 			stream.SendNext(cards);
-
-			stream.SendNext(playerNumber);
 		}
 		else 
 		{	
@@ -47,8 +44,6 @@ public class CardsInPlay : MonoBehaviour
 
 			cards = (string[])stream.ReceiveNext();
 			cardsOnTable = new List<string>(cards);
-
-			playerNumber = (int)stream.ReceiveNext();
 		}
 	}
 }

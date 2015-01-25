@@ -30,8 +30,6 @@ public class ViewControl : MonoBehaviour {
 
 	void Start () {
 		fungus = GameObject.Find ("FungusScript");
-		fungus.SetActive(false);
-
 		canvas = GameObject.Find ("Canvas");
 		canvas.SetActive(false);
 		sequenceScript = GameObject.Find("FungusScript").GetComponent<FungusScript>();
@@ -42,7 +40,6 @@ public class ViewControl : MonoBehaviour {
 		if(player && otherPlayer)
 		{
 			// Start fungus and the canvas
-			fungus.SetActive(true);
 			canvas.SetActive(true);
 
 			// Link Player to theyre stat bars
@@ -93,7 +90,8 @@ public class ViewControl : MonoBehaviour {
 					int i = 0;
 					foreach(GameObject player1TableCard in GameObject.FindGameObjectsWithTag("Player1TableCards"))
 					{
-
+						// Set Player Card Values
+						player1TableCard.GetComponent<CardProperties>().cardImageTexture = player1TableCardProperties[i].cardImageTexture;
 						player1TableCard.GetComponent<CardProperties>().cardName = player1TableCardProperties[i].cardName;
 						player1TableCard.GetComponent<CardProperties>().defenceCard = player1TableCardProperties[i].defenceCard;
 						player1TableCard.GetComponent<CardProperties>().utilityCard = player1TableCardProperties[i].utilityCard;
@@ -105,6 +103,8 @@ public class ViewControl : MonoBehaviour {
 						player1TableCard.GetComponent<CardProperties>().defenceValue = player1TableCardProperties[i].defenceValue;
 						player1TableCard.GetComponent<CardProperties>().AttackBonus = player1TableCardProperties[i].AttackBonus;
 
+						GameObject.Find("Front" + i).renderer.material.mainTexture = player1TableCardProperties[i].cardImageTexture;
+
 						i++;
 					}
 
@@ -112,6 +112,7 @@ public class ViewControl : MonoBehaviour {
 					foreach(GameObject player2TableCard in GameObject.FindGameObjectsWithTag("Player2TableCards"))
 					{
 						// Load Cards into the objects on the table here.
+						player2TableCard.GetComponent<CardProperties>().cardImageTexture = player2TableCardProperties[i].cardImageTexture;
 						player2TableCard.GetComponent<CardProperties>().cardName = player2TableCardProperties[i].cardName;
 						player2TableCard.GetComponent<CardProperties>().defenceCard = player2TableCardProperties[i].defenceCard;
 						player2TableCard.GetComponent<CardProperties>().utilityCard = player2TableCardProperties[i].utilityCard;
@@ -122,6 +123,10 @@ public class ViewControl : MonoBehaviour {
 						player2TableCard.GetComponent<CardProperties>().diceValue = player2TableCardProperties[i].diceValue;
 						player2TableCard.GetComponent<CardProperties>().defenceValue = player2TableCardProperties[i].defenceValue;
 						player2TableCard.GetComponent<CardProperties>().AttackBonus = player2TableCardProperties[i].AttackBonus;
+
+						i += 5;
+						GameObject.Find("Front" + i).renderer.material.mainTexture = player1TableCardProperties[i].cardImageTexture;
+						i -= 5;
 
 						i++;
 					}
