@@ -23,6 +23,7 @@ public class ViewControl : MonoBehaviour {
 	private bool hasBeenUpdated = false;
 	private GameObject fungus;
 	private GameObject canvas;
+	private bool first = true;
 
 	void Awake () {
 		fungus = GameObject.Find ("FungusScript");
@@ -36,8 +37,25 @@ public class ViewControl : MonoBehaviour {
 	{
 		if(player && otherPlayer)
 		{
+			// Start fungus and the canvas
 			fungus.SetActive(true);
 			canvas.SetActive(true);
+
+			// Link Player to theyre stat bars
+			if(first)
+			{
+				GameObject.Find ("PlayerTwoHealthBar").GetComponent<HealthUIControl>().player = otherPlayer;
+				GameObject.Find ("PlayerTwoStaminaBar").GetComponent<StaminaUIControl>().player = otherPlayer;
+				GameObject.Find ("PlayerTwoFooting").GetComponent<FootingUIControl>().player = otherPlayer;
+				GameObject.Find ("PlayerTwoTempDef").GetComponent<TempDefUIControl>().player = otherPlayer;
+
+				GameObject.Find ("PlayerOneHealthBar").GetComponent<HealthUIControl>().player = player;
+				GameObject.Find ("PlayerOneStaminaBar").GetComponent<StaminaUIControl>().player = player;
+				GameObject.Find ("PlayerOneFooting").GetComponent<FootingUIControl>().player = player;
+				GameObject.Find ("PlayerOneTempDef").GetComponent<TempDefUIControl>().player = player;
+				first = false;
+			}
+
 			if(myInPlay.turnEnded && notMyInPlay.turnEnded && !hasBeenUpdated)
 			{
 				hasBeenUpdated = true;
@@ -158,19 +176,11 @@ public class ViewControl : MonoBehaviour {
 				{
 					this.player = myPlayer;
 					this.myInPlay = player.GetComponent<CardsInPlay>();
-					GameObject.Find ("PlayerOneHealthBar").GetComponent<HealthUIControl>().player = myPlayer;
-					GameObject.Find ("PlayerOneStaminaBar").GetComponent<StaminaUIControl>().player = myPlayer;
-					GameObject.Find ("PlayerOneFooting").GetComponent<FootingUIControl>().player = myPlayer;
-					GameObject.Find ("PlayerOneTempDef").GetComponent<TempDefUIControl>().player = myPlayer;
 				}
 				else if(myPlayer != this.player)
 				{
 					this.otherPlayer = myPlayer;
 					this.notMyInPlay = otherPlayer.GetComponent<CardsInPlay>();
-					GameObject.Find ("PlayerTwoHealthBar").GetComponent<HealthUIControl>().player = otherPlayer;
-					GameObject.Find ("PlayerTwoStaminaBar").GetComponent<StaminaUIControl>().player = otherPlayer;
-					GameObject.Find ("PlayerTwoFooting").GetComponent<FootingUIControl>().player = otherPlayer;
-					GameObject.Find ("PlayerTwoTempDef").GetComponent<TempDefUIControl>().player = otherPlayer;
 				}
 
 			}
