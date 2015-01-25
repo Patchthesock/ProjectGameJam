@@ -87,6 +87,9 @@ public class Player : MonoBehaviour {
 	public void IncreaseStamina(int inc)
 	{
 		stamina += inc;
+
+		if(stamina > maxStamina)
+			stamina = maxStamina;
 	}
 
 	[RPC]
