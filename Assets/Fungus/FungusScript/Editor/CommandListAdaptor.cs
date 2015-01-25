@@ -18,7 +18,7 @@ namespace Fungus
 		public float fixedItemHeight;
 
 		public Rect nodeRect = new Rect();
-		
+
 		public SerializedProperty this[int index] {
 			get { return _arrayProperty.GetArrayElementAtIndex(index); }
 		}
@@ -164,7 +164,16 @@ namespace Fungus
 			bool isComment = command.GetType() == typeof(Comment);
 
 			bool error = false;
-			string summary = command.GetSummary().Replace("\n", "").Replace("\r", "");
+			string summary = command.GetSummary();
+			if (summary == null)
+			{
+				summary = "";
+			}
+			else
+			{
+				summary = summary.Replace("\n", "").Replace("\r", "");
+			}
+
 			if (summary.Length > 80)
 			{
 				summary = summary.Substring(0, 80) + "...";
@@ -184,9 +193,6 @@ namespace Fungus
 					break;
 				}
 			}
-
-			bool highlight = (Application.isPlaying && command.IsExecuting()) ||
-							 (!Application.isPlaying && commandIsSelected);
 
 			string commandName = commandInfoAttr.CommandName;
 
@@ -222,29 +228,36 @@ namespace Fungus
 			commandLabelRect.width -= (indentSize * command.indentLevel - 22);
 			commandLabelRect.height += 5;
 
-			if (!Application.isPlaying &&
-			    Event.current.type == EventType.MouseDown &&
-			    (Event.current.button == 0 || Event.current.button == 1) &&
+			// Select command via left click
+			if (Event.current.type == EventType.MouseDown &&
+			    Event.current.button == 0 &&
 			    position.Contains(Event.current.mousePosition))
 			{
 				if (fungusScript.selectedCommands.Contains(command) && Event.current.button == 0)
 				{
+					// Left click on an already selected command
 					fungusScript.selectedCommands.Remove(command);
 				}
 				else
 				{
+					// Left click and no command key
+					if (!EditorGUI.actionKey && Event.current.button == 0)
+					{
+						fungusScript.ClearSelectedCommands();
+					}
+
 					fungusScript.AddSelectedCommand(command);
 				}
 				GUIUtility.keyboardControl = 0; // Fix for textarea not refeshing (change focus)
 			}
 
 			Color commandLabelColor = Color.white;
-			if (fungusScript.settings.colorCommands)
+			if (fungusScript.colorCommands)
 			{
 				commandLabelColor = command.GetButtonColor();
 			}
 
-			if (highlight)
+			if (commandIsSelected)
 			{
 				commandLabelColor = Color.green;
 			}
@@ -268,6 +281,15 @@ namespace Fungus
 				GUI.Label(commandLabelRect, commandName, commandLabelStyle);
 			}
 
+			if (command.IsExecuting())
+			{
+				Rect iconRect = new Rect(commandLabelRect);
+				iconRect.x += iconRect.width - commandLabelRect.width - 20;
+				iconRect.width = 20;
+				iconRect.height = 20;
+				GUI.Label(iconRect, FungusEditorResources.texPlaySmall, new GUIStyle());
+			}
+
 			Rect summaryRect = new Rect(commandLabelRect);
 			if (!isComment)
 			{
@@ -275,6 +297,14 @@ namespace Fungus
 				summaryRect.width -= commandNameWidth;
 				summaryRect.width -= 5;
 			}
+
+			GUIStyle summaryStyle = new GUIStyle();
+			summaryStyle.fontSize = 10; 
+			summaryStyle.padding.top += 5;
+			summaryStyle.richText = true;
+			summaryStyle.wordWrap = false;
+			summaryStyle.clipping = TextClipping.Clip;
+			GUI.Label(summaryRect, summary, summaryStyle);
 
 			if (error)
 			{
@@ -286,14 +316,6 @@ namespace Fungus
 				GUI.Label(errorRect, editorSkin.GetStyle("CN EntryError").normal.background);
 				summaryRect.width -= 20;
 			}
-
-			GUIStyle summaryStyle = new GUIStyle();
-			summaryStyle.fontSize = 10; 
-			summaryStyle.padding.top += 5;
-			summaryStyle.richText = true;
-			summaryStyle.wordWrap = false;
-			summaryStyle.clipping = TextClipping.Clip;
-			GUI.Label(summaryRect, summary, summaryStyle);
 
 			GUI.backgroundColor = Color.white;
 		}

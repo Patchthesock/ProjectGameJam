@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Fungus
 {
@@ -11,19 +12,23 @@ namespace Fungus
 	 * Visual scripting controller for the Fungus Script programming language.
 	 * FungusScript objects may be edited visually using the Fungus Script editor window.
 	 */
+	[AddComponentMenu("Fungus/Fungus Script")]
 	public class FungusScript : MonoBehaviour 
 	{
-		/**
-		 * Currently executing sequence.
-		 */
-		[System.NonSerialized]
-		public Sequence executingSequence;
-
 		/**
 		 * Scroll position of Fungus Script editor window.
 		 */
 		[HideInInspector]
 		public Vector2 scrollPos;
+
+		/**
+		 * Scroll position of Fungus Script variables window.
+		 */
+		[HideInInspector]
+		public Vector2 variablesScrollPos;
+
+		[HideInInspector]
+		public bool variablesExpanded = true;
 
 		/**
 		 * Zoom level of Fungus Script editor window
@@ -55,61 +60,29 @@ namespace Fungus
 		[HideInInspector]
 		public List<Variable> variables = new List<Variable>();
 
-		/**
-		 * First sequence to execute when the Fungus Script executes.
-		 */
-		[Tooltip("First sequence to execute when the Fungus Script executes")]
-		public Sequence startSequence;
+		[TextArea(3, 5)]
+		[Tooltip("Description text displayed in the Fungus Script editor window")]
+		public string description = "";
 
 		/**
-		 * Execute this Fungus Script when the scene starts.
-		 */
-		[Tooltip("Execute this Fungus Script when the scene starts playing")]
-		public bool executeOnStart = true;
-
-		[System.Serializable]
-		public class Settings
-		{
-			/**
-			 * Slow down execution when playing in the editor to make it easier to visualise program flow.
-			 */
-			[Tooltip("Slow down execution in the editor to make it easier to visualise program flow")]
-			public bool runSlowInEditor = true;
-
-			/**
-		 	 * Minimum time for each command to execute when runSlowInEditor is enabled.
-		 	 */
-			[Range(0f, 5f)]
-			[Tooltip("Minimum time that each command will take to execute when Run Slow In Editor is enabled")]
-			public float runSlowDuration = 0.25f;
-
-			/**
-			 * Use command color when displaying the command list in the Fungus Editor window.
-			 */
-			[Tooltip("Use command color when displaying the command list in the Fungus Editor window")]
-			public bool colorCommands = true;
-			
-			/**
-			 * Hides the Fungus Script sequence and command components in the inspector.
-			 * Deselect to inspect the sequence and command components that make up the Fungus Script.
-			 */
-			[Tooltip("Hides the Fungus Script sequence and command components in the inspector")]
-			public bool hideComponents = true;
-		}
+	 	 * Minimum time for each command to execute when runSlowInEditor is enabled.
+	 	 */
+		[Range(0f, 5f)]
+		[Tooltip("Minimum time that each command will take to execute when Run Slow In Editor is enabled")]
+		public float runSlowDuration = 0.25f;
 
 		/**
-		 * Advanced configuration options for the Fungus Script.
+		 * Use command color when displaying the command list in the Fungus Editor window.
 		 */
-		[Tooltip("Advanced configuration options for the Fungus Script")]
-		public Settings settings;
-
-		protected virtual void Start()
-		{
-			if (executeOnStart)
-			{
-				Execute();
-			}
-		}
+		[Tooltip("Use command color when displaying the command list in the Fungus Editor window")]
+		public bool colorCommands = true;
+		
+		/**
+		 * Hides the Fungus Script sequence and command components in the inspector.
+		 * Deselect to inspect the sequence and command components that make up the Fungus Script.
+		 */
+		[Tooltip("Hides the Fungus Script sequence and command components in the inspector")]
+		public bool hideComponents = true;
 
 		protected virtual Sequence CreateSequenceComponent(GameObject parent)
 		{
@@ -125,37 +98,79 @@ namespace Fungus
 			Sequence s = CreateSequenceComponent(gameObject);
 			s.nodeRect.x = position.x;
 			s.nodeRect.y = position.y;
+			s.sequenceName = GetUniqueSequenceKey(s.sequenceName, s);
 			return s;
 		}
 
 		/**
-		 * Start running the Fungus Script by executing the startSequence.
+		 * Start running another Fungus Script by executing a specific child sequence.
+		 * The sequence must be in an idle state to be executed.
+		 * Returns true if the Sequence started execution.
 		 */
-		public virtual void Execute()
+		public virtual bool ExecuteSequence(string sequenceName)
 		{
-			if (startSequence == null)
+			Sequence [] sequences = GetComponentsInChildren<Sequence>();
+			foreach (Sequence sequence in sequences)
 			{
-				return;
+				if (sequence.sequenceName == sequenceName)
+				{
+					return ExecuteSequence(sequence);
+				}
 			}
 
-			ExecuteSequence(startSequence);
+			return false;
 		}
 
 		/**
-		 * Start running the Fungus Script by executing a specific child sequence.
+		 * Sends a message to this Fungus Script only.
+		 * Any sequence with a matching MessageReceived event handler will start executing.
 		 */
-		public virtual void ExecuteSequence(Sequence sequence)
+		public virtual void SendFungusMessage(string messageName)
 		{
-			// Sequence must be a child of the parent Fungus Script
-			if (sequence == null ||
-			    sequence.transform.parent != transform && sequence.transform != transform) 
+			MessageReceived[] eventHandlers = GetComponentsInChildren<MessageReceived>();
+			foreach (MessageReceived eventHandler in eventHandlers)
 			{
-				return;
+				eventHandler.OnSendFungusMessage(messageName);
+			}
+		}
+
+		/**
+		 * Sends a message to all Fungus Script objects in the current scene.
+		 * Any sequence with a matching MessageReceived event handler will start executing.
+		 */
+		public static void BroadcastFungusMessage(string messageName)
+		{
+			MessageReceived[] eventHandlers = GameObject.FindObjectsOfType<MessageReceived>();
+			foreach (MessageReceived eventHandler in eventHandlers)
+			{
+				eventHandler.OnSendFungusMessage(messageName);
+			}
+		}
+
+		/**
+		 * Start running another Fungus Script by executing a specific child sequence.
+		 * The sequence must be in an idle state to be executed.
+		 * Returns true if the Sequence started execution.
+		 */
+		public virtual bool ExecuteSequence(Sequence sequence)
+		{
+			// Sequence must be a component of the Fungus Script game object
+			if (sequence == null ||
+			    sequence.gameObject != gameObject) 
+			{
+				return false;
 			}
 
-			executingSequence = sequence;
-			selectedSequence = sequence;
+			// Can't restart a running sequence, have to wait until it's idle again
+			if (sequence.IsExecuting())
+			{
+				return false;
+			}
+
+			// Execute the first command in the command list
 			sequence.ExecuteNextCommand();
+
+			return true;
 		}
 
 		/**
@@ -192,6 +207,49 @@ namespace Fungus
 					}
 
 					if (variable.key.Equals(key, StringComparison.CurrentCultureIgnoreCase))
+					{
+						collision = true;
+						suffix++;
+						key = baseKey + suffix;
+					}
+				}
+				
+				if (!collision)
+				{
+					return key;
+				}
+			}
+		}
+
+		/**
+		 * Returns a new Sequence key that is guaranteed not to clash with any existing Sequence in the Fungus Script.
+		 */
+		public virtual string GetUniqueSequenceKey(string originalKey, Sequence ignoreSequence = null)
+		{
+			int suffix = 0;
+			string baseKey = originalKey.Trim();
+			
+			// No empty keys allowed
+			if (baseKey.Length == 0)
+			{
+				baseKey = "Sequence";
+			}
+
+			Sequence[] sequences = GetComponentsInChildren<Sequence>();
+
+			string key = baseKey;
+			while (true)
+			{
+				bool collision = false;
+				foreach(Sequence sequence in sequences)
+				{
+					if (sequence == ignoreSequence ||
+					    sequence.sequenceName == null)
+					{
+						continue;
+					}
+					
+					if (sequence.sequenceName.Equals(key, StringComparison.CurrentCultureIgnoreCase))
 					{
 						collision = true;
 						suffix++;
@@ -250,7 +308,7 @@ namespace Fungus
 
 		/**
 		 * Gets the value of an integer variable.
-		 * Returns false if the variable key does not exist.
+		 * Returns 0 if the variable key does not exist.
 		 */
 		public virtual int GetIntegerVariable(string key)
 		{
@@ -292,7 +350,7 @@ namespace Fungus
 
 		/**
 		 * Gets the value of a float variable.
-		 * Returns false if the variable key does not exist.
+		 * Returns 0 if the variable key does not exist.
 		 */
 		public virtual float GetFloatVariable(string key)
 		{
@@ -334,7 +392,7 @@ namespace Fungus
 
 		/**
 		 * Gets the value of a string variable.
-		 * Returns false if the variable key does not exist.
+		 * Returns the empty string if the variable key does not exist.
 		 */
 		public virtual string GetStringVariable(string key)
 		{
@@ -379,21 +437,45 @@ namespace Fungus
 		 */
 		public virtual void UpdateHideFlags()
 		{
-			Sequence[] sequences = GetComponentsInChildren<Sequence>();
-			foreach (Sequence sequence in sequences)
+			if (hideComponents)
 			{
-				sequence.hideFlags = settings.hideComponents ? HideFlags.HideInInspector : HideFlags.None;
-				if (sequence.gameObject != gameObject)
+				Sequence[] sequences = GetComponentsInChildren<Sequence>();
+				foreach (Sequence sequence in sequences)
 				{
-					sequence.gameObject.hideFlags = settings.hideComponents ? HideFlags.HideInHierarchy : HideFlags.None;
+					sequence.hideFlags = HideFlags.HideInInspector;
+					if (sequence.gameObject != gameObject)
+					{
+						sequence.gameObject.hideFlags = HideFlags.HideInHierarchy;
+					}
+				}
+
+				Command[] commands = GetComponentsInChildren<Command>();
+				foreach (Command command in commands)
+				{
+					command.hideFlags = HideFlags.HideInInspector;
+				}
+
+				EventHandler[] eventHandlers = GetComponentsInChildren<EventHandler>();
+				foreach (EventHandler eventHandler in eventHandlers)
+				{
+					eventHandler.hideFlags = HideFlags.HideInInspector;
+				}
+			}
+			else
+			{
+				MonoBehaviour[] monoBehaviours = GetComponentsInChildren<MonoBehaviour>();
+				foreach (MonoBehaviour monoBehaviour in monoBehaviours)
+				{
+					if (monoBehaviour == null)
+					{
+						continue;
+					}
+
+					monoBehaviour.hideFlags = HideFlags.None;
+					monoBehaviour.gameObject.hideFlags = HideFlags.None;
 				}
 			}
 
-			Command[] commands = GetComponentsInChildren<Command>();
-			foreach (Command command in commands)
-			{
-				command.hideFlags = settings.hideComponents ? HideFlags.HideInInspector : HideFlags.None;
-			}
 		}
 
 		public virtual void ClearSelectedCommands()
@@ -433,6 +515,32 @@ namespace Fungus
 					variable.OnReset();
 				}
 			}
+		}
+
+		public virtual string SubstituteVariables(string text)
+		{
+			string subbedText = text;
+			
+			// Instantiate the regular expression object.
+			Regex r = new Regex("{\\$.*?}");
+			
+			// Match the regular expression pattern against a text string.
+			var results = r.Matches(text);
+			foreach (Match match in results)
+			{
+				string key = match.Value.Substring(2, match.Value.Length - 3);
+				foreach (Variable variable in variables)
+				{
+					if (variable.key == key)
+					{	
+						string value = variable.ToString();
+						subbedText = subbedText.Replace(match.Value, value);
+						break;
+					}
+				}
+			}
+			
+			return subbedText;
 		}
 	}
 

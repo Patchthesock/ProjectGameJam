@@ -10,16 +10,18 @@ namespace Fungus
 	[CustomEditor (typeof(FungusScript))]
 	public class FungusScriptEditor : Editor 
 	{
-		protected SerializedProperty startSequenceProp;
-		protected SerializedProperty executeOnStartProp;
-		protected SerializedProperty settingsProp;
+		protected SerializedProperty descriptionProp;
+		protected SerializedProperty colorCommandsProp;
+		protected SerializedProperty hideComponentsProp;
+		protected SerializedProperty runSlowDurationProp;
 		protected SerializedProperty variablesProp;
 
 		protected virtual void OnEnable()
 		{
-			startSequenceProp = serializedObject.FindProperty("startSequence");
-			executeOnStartProp = serializedObject.FindProperty("executeOnStart");
-			settingsProp = serializedObject.FindProperty("settings");
+			descriptionProp = serializedObject.FindProperty("description");
+			colorCommandsProp = serializedObject.FindProperty("colorCommands");
+			hideComponentsProp = serializedObject.FindProperty("hideComponents");
+			runSlowDurationProp = serializedObject.FindProperty("runSlowDuration");
 			variablesProp = serializedObject.FindProperty("variables");
 		}
 
@@ -31,37 +33,10 @@ namespace Fungus
 
 			fungusScript.UpdateHideFlags();
 
-			if (Application.isPlaying)
-			{
-				if (fungusScript.executingSequence == null)
-				{
-					fungusScript.ClearSelectedCommands();
-				}
-				else
-				{
-					fungusScript.ClearSelectedCommands();
-					fungusScript.AddSelectedCommand(fungusScript.executingSequence.activeCommand);
-					EditorUtility.SetDirty(fungusScript);
-				}
-			}
-
-			SequenceEditor.SequenceField(startSequenceProp, 
-			                             new GUIContent("Start Sequence", "First sequence to execute when the Fungus Script executes"), 
-										 new GUIContent("<None>"),
-			                             fungusScript);
-
-			if (fungusScript.startSequence == null)
-			{
-				GUIStyle style = new GUIStyle(GUI.skin.label);
-				style.normal.textColor = new Color(1,0,0);
-				EditorGUILayout.LabelField(new GUIContent("Error: Please select a Start Sequence"), style);
-			}
-
-			EditorGUILayout.PropertyField(executeOnStartProp, new GUIContent("Execute On Start", "Execute this Fungus Script when the scene starts playing"));
-
-			EditorGUILayout.PropertyField(settingsProp, new GUIContent("Settings", "Configution options for the Fungus Script"), true);
-
-			EditorGUILayout.Separator();
+			EditorGUILayout.PropertyField(descriptionProp);
+			EditorGUILayout.PropertyField(colorCommandsProp);
+			EditorGUILayout.PropertyField(hideComponentsProp);
+			EditorGUILayout.PropertyField(runSlowDurationProp);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.FlexibleSpace();
@@ -72,60 +47,87 @@ namespace Fungus
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 
-			EditorGUILayout.Separator();
-
-			if (fungusScript.selectedSequence != null)
-			{
-				SequenceEditor sequenceEditor = Editor.CreateEditor(fungusScript.selectedSequence) as SequenceEditor;
-				sequenceEditor.DrawInspectorGUI(fungusScript);
-				DestroyImmediate(sequenceEditor);
-			}
-
-			if (fungusScript.selectedCommands.Count == 1)
-			{
-				if (fungusScript.selectedCommands[0] == null)
-				{
-					fungusScript.ClearSelectedCommands();
-				}
-				else
-				{
-					CommandEditor commandEditor = Editor.CreateEditor(fungusScript.selectedCommands[0]) as CommandEditor;
-					commandEditor.DrawCommandInspectorGUI();
-					DestroyImmediate(commandEditor);
-				}
-			}
-
-			EditorGUILayout.Separator();
-
-			DrawVariablesGUI();
-
 			serializedObject.ApplyModifiedProperties();
 		}
 
 		public virtual void DrawVariablesGUI()
 		{
-			FungusScript t = target as FungusScript;
-			
-			ReorderableListGUI.Title("Variables");
+			serializedObject.Update();
 
-			VariableListAdaptor adaptor = new VariableListAdaptor(variablesProp, 0);
-			ReorderableListControl.DrawControlFromState(adaptor, null, ReorderableListFlags.DisableContextMenu | ReorderableListFlags.HideAddButton);
-			
-			GUILayout.BeginHorizontal();
-			GUILayout.FlexibleSpace();
-			
-			if (!Application.isPlaying && GUILayout.Button("Add Variable"))
+			FungusScript t = target as FungusScript;
+
+			if (t.variables.Count == 0)
 			{
-				GenericMenu menu = new GenericMenu ();
-				
-				menu.AddItem(new GUIContent ("Boolean"), false, AddVariable<BooleanVariable>, t);
-				menu.AddItem (new GUIContent ("Integer"), false, AddVariable<IntegerVariable>, t);
-				menu.AddItem (new GUIContent ("Float"), false, AddVariable<FloatVariable>, t);
-				menu.AddItem (new GUIContent ("String"), false, AddVariable<StringVariable>, t);
-				
-				menu.ShowAsContext ();
+				t.variablesExpanded = true;
 			}
-			GUILayout.EndHorizontal();
+
+			if (!t.variablesExpanded)
+			{
+				if (GUILayout.Button ("Variables (" + t.variables.Count + ")", GUILayout.Height(24)))
+				{
+					t.variablesExpanded = true;
+				}
+			}
+			else
+			{
+				Rect listRect = new Rect();
+
+				if (t.variables.Count > 0)
+				{
+					ReorderableListGUI.Title("Variables");
+					VariableListAdaptor adaptor = new VariableListAdaptor(variablesProp, 0);
+
+					ReorderableListFlags flags = ReorderableListFlags.DisableContextMenu | ReorderableListFlags.HideAddButton;
+
+					ReorderableListControl.DrawControlFromState(adaptor, null, flags);
+					listRect = GUILayoutUtility.GetLastRect();
+				}
+				else
+				{
+					GUILayoutUtility.GetRect(300, 24);
+					listRect = GUILayoutUtility.GetLastRect();
+					listRect.y += 20;
+				}
+
+				float plusWidth = 32;
+				float plusHeight = 24;
+
+				Rect buttonRect = listRect;
+				float buttonHeight = 24;
+				buttonRect.x = 4;
+				buttonRect.y -= buttonHeight - 1;
+				buttonRect.height = buttonHeight;
+				if (!Application.isPlaying)
+				{
+					buttonRect.width -= 30;
+				}
+
+				if (GUI.Button (buttonRect, "Variables"))
+				{
+					t.variablesExpanded = false;
+				}
+
+				Rect plusRect = listRect;
+				plusRect.x += plusRect.width - plusWidth;
+				plusRect.y -= plusHeight - 1;
+				plusRect.width = plusWidth;
+				plusRect.height = plusHeight;
+
+				if (!Application.isPlaying && 
+				    GUI.Button(plusRect, FungusEditorResources.texAddButton))
+				{
+					GenericMenu menu = new GenericMenu ();
+					
+					menu.AddItem(new GUIContent ("Boolean"), false, AddVariable<BooleanVariable>, t);
+					menu.AddItem (new GUIContent ("Integer"), false, AddVariable<IntegerVariable>, t);
+					menu.AddItem (new GUIContent ("Float"), false, AddVariable<FloatVariable>, t);
+					menu.AddItem (new GUIContent ("String"), false, AddVariable<StringVariable>, t);
+
+					menu.ShowAsContext ();
+				}
+			}
+
+			serializedObject.ApplyModifiedProperties();
 		}
 		
 		protected virtual void AddVariable<T>(object obj) where T : Variable

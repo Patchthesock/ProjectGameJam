@@ -91,10 +91,21 @@ namespace Fungus
 			OnExit();
 			if (parentSequence != null)
 			{
-				parentSequence.Stop();
 				FungusScript fungusScript = parentSequence.GetFungusScript();
+
+				// Record the currently selected sequence because Stop() will clear it.
+				Sequence selectedSequence = fungusScript.selectedSequence;
+
+				parentSequence.Stop();
 				if (fungusScript != null)
 				{
+					// If the executing sequence is currently selected then follow the execution 
+					// onto the next sequence in the inspector.
+					if (selectedSequence == parentSequence)
+					{
+						fungusScript.selectedSequence = s;
+					}
+
 					fungusScript.ExecuteSequence(s);
 				}
 			}
@@ -149,6 +160,9 @@ namespace Fungus
 			return 0;
 		}
 
+		/**
+		 * Return the color for the command background in inspector.
+		 */
 		public virtual Color GetButtonColor()
 		{
 			return Color.white;
