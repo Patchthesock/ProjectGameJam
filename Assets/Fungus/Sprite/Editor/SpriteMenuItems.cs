@@ -7,28 +7,29 @@ namespace Fungus
 
 	public class SpriteMenuItems 
 	{
-		[MenuItem("GameObject/Fungus/Sprite/ParallaxSprite")]
-		static void CreateParallaxSprite()
-		{
-			InstantiatePrefab("ParallaxSprite");
-		}
-
 		[MenuItem("GameObject/Fungus/Sprite/ClickableSprite")]
 		static void CreateClickableSprite()
 		{
-			InstantiatePrefab("ClickableSprite");
+			FungusScriptMenuItems.SpawnPrefab("Assets/Fungus/Sprite/Prefabs/ClickableSprite.prefab");
 		}
 
-		static void InstantiatePrefab(string prefabName)
+		[MenuItem("GameObject/Fungus/Sprite/DraggableSprite")]
+		static void CreateDraggableSprite()
 		{
-			GameObject prefab = Resources.LoadAssetAtPath("Assets/Fungus/Sprite/Prefabs/" + prefabName + ".prefab", typeof(GameObject)) as GameObject;
-			if (prefab != null)
-			{
-				GameObject go = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
-				go.name = prefabName;
-			}
+			FungusScriptMenuItems.SpawnPrefab("Assets/Fungus/Sprite/Prefabs/DraggableSprite.prefab");
 		}
 
+		[MenuItem("GameObject/Fungus/Sprite/DragTargetSprite")]
+		static void CreateDragTargetSprite()
+		{
+			FungusScriptMenuItems.SpawnPrefab("Assets/Fungus/Sprite/Prefabs/DragTargetSprite.prefab");
+		}
+
+		[MenuItem("GameObject/Fungus/Sprite/ParallaxSprite")]
+		static void CreateParallaxSprite()
+		{
+			FungusScriptMenuItems.SpawnPrefab("Assets/Fungus/Sprite/Prefabs/ParallaxSprite.prefab");
+		}
 	}
 
 }
