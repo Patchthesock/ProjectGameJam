@@ -153,13 +153,19 @@ public class ViewControl : MonoBehaviour {
 				{
 					this.player = myPlayer;
 					this.myInPlay = player.GetComponent<CardsInPlay>();
-					GameObject.Find("PlayerOneHealthBar").GetComponent<HealthUIControl>().player = myPlayer;
+					GameObject.Find ("PlayerOneHealthBar").GetComponent<HealthUIControl>().player = myPlayer;
+					GameObject.Find ("PlayerOneStaminaBar").GetComponent<StaminaUIControl>().player = myPlayer;
+					GameObject.Find ("PlayerOneFooting").GetComponent<FootingUIControl>().player = myPlayer;
+					GameObject.Find ("PlayerOneTempDef").GetComponent<TempDefUIControl>().player = myPlayer;
 				}
 				else if(myPlayer != this.player)
 				{
 					this.otherPlayer = myPlayer;
 					this.notMyInPlay = otherPlayer.GetComponent<CardsInPlay>();
-					GameObject.Find("PlayerTwoHealthBar").GetComponent<HealthUIControl>().player = myPlayer;
+					GameObject.Find ("PlayerTwoHealthBar").GetComponent<HealthUIControl>().player = otherPlayer;
+					GameObject.Find ("PlayerTwoStaminaBar").GetComponent<StaminaUIControl>().player = otherPlayer;
+					GameObject.Find ("PlayerTwoFooting").GetComponent<FootingUIControl>().player = otherPlayer;
+					GameObject.Find ("PlayerTwoTempDef").GetComponent<TempDefUIControl>().player = otherPlayer;
 				}
 
 			}

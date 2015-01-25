@@ -47,8 +47,8 @@ public class Player : MonoBehaviour {
 	{
 		return tempDefence;
 	}
-	[RPC]
 
+	[RPC]
 	public int GetPosition ()
 	{
 		return position;
