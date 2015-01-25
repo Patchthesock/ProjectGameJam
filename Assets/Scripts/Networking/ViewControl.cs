@@ -15,6 +15,8 @@ public class ViewControl : MonoBehaviour {
 	public List<CardProperties> player1TableCardProperties;
 	public List<CardProperties> player2TableCardProperties;
 
+	private List<string> playedCardsNames;
+
 	public GameObject player;
 	public GameObject otherPlayer;
 
@@ -171,9 +173,13 @@ public class ViewControl : MonoBehaviour {
 		Debug.Log("playing cards");
 		int attack;
 		CardProperties props;
+		string cardName;
+		playedCardsNames = new List<string>();
 		yield return new WaitForSeconds(1);
 		props = player1SelectedCardProperties[0];
 
+		cardName = "P2C" + myInPlay.callOrder[0];
+		playedCardsNames.Add(cardName);
 		sequenceScript.ExecuteSequence("PlayP1C" + myInPlay.callOrder[0]);
 
 		attack = props.attack - notMyPlayer.GetTempDefence();
@@ -191,7 +197,9 @@ public class ViewControl : MonoBehaviour {
 		yield return new WaitForSeconds(5);
 		props = player2SelectedCardProperties[0];
 
-		sequenceScript.ExecuteSequence("PlayP2C" + myInPlay.callOrder[0]);
+		cardName = "P2C" + notMyInPlay.callOrder[0];
+		playedCardsNames.Add(cardName);
+		sequenceScript.ExecuteSequence("PlayP2C" + notMyInPlay.callOrder[0]);
 
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
@@ -206,11 +214,13 @@ public class ViewControl : MonoBehaviour {
 		//notMyPlayer.IncreaseTempDefence(props.defence);
 		//notMyPlayer.DamageStamina(props.stamina);
 		
-		yield return new WaitForSeconds(9);
+		yield return new WaitForSeconds(5);
 		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
 		//myPlayer.ResetTempDefence();
 		props = player1SelectedCardProperties[1];
 
+		cardName = "P1C" + myInPlay.callOrder[1];
+		playedCardsNames.Add(cardName);
 		sequenceScript.ExecuteSequence("PlayP1C" + myInPlay.callOrder[1]);
 		attack = props.attack - notMyPlayer.GetTempDefence();
 		if(attack < 0)
@@ -224,12 +234,14 @@ public class ViewControl : MonoBehaviour {
 		//notMyPlayer.ChangePosition(props.posture);
 		//myPlayer.IncreaseTempDefence(props.defence);
 		//myPlayer.DamageStamina(props.stamina);
-		yield return new WaitForSeconds(14);
+		yield return new WaitForSeconds(5);
 		this.otherPlayerView.RPC("ResetTempDefence", PhotonTargets.All);
 		//notMyPlayer.ResetTempDefence();
 		props = player2SelectedCardProperties[1];
 
-		sequenceScript.ExecuteSequence("PlayP2C" + myInPlay.callOrder[1]);
+		cardName = "P2C" + notMyInPlay.callOrder[1];
+		playedCardsNames.Add(cardName);
+		sequenceScript.ExecuteSequence( "PlayP2C" + notMyInPlay.callOrder[1]);
 
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
@@ -244,11 +256,13 @@ public class ViewControl : MonoBehaviour {
 		//notMyPlayer.IncreaseTempDefence(props.defence);
 		//notMyPlayer.DamageStamina(props.stamina);
 		
-		yield return new WaitForSeconds(19);
+		yield return new WaitForSeconds(5);
 		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
 		//myPlayer.ResetTempDefence();
 		props = player1SelectedCardProperties[2];
 
+		cardName = "P1C" + myInPlay.callOrder[2];
+		playedCardsNames.Add(cardName);
 		sequenceScript.ExecuteSequence("PlayP1C" + myInPlay.callOrder[2]);
 
 		attack = props.attack - notMyPlayer.GetTempDefence();
@@ -264,13 +278,15 @@ public class ViewControl : MonoBehaviour {
 		//notMyPlayer.ChangePosition(props.posture);
 		//myPlayer.IncreaseTempDefence(props.defence);
 		//myPlayer.DamageStamina(props.stamina);
-		yield return new WaitForSeconds(23);
+		yield return new WaitForSeconds(5);
 		this.otherPlayerView.RPC("ResetTempDefence", PhotonTargets.All);
 		//notMyPlayer.ResetTempDefence();
 		
 		props = player2SelectedCardProperties[2];
 
-		sequenceScript.ExecuteSequence("PlayP2C" + myInPlay.callOrder[2]);
+		cardName = "P2C" + notMyInPlay.callOrder[2];
+		playedCardsNames.Add(cardName);
+		sequenceScript.ExecuteSequence("PlayP2C" + notMyInPlay.callOrder[2]);
 
 		attack = props.attack - myPlayer.GetTempDefence();
 		if(attack < 0)
@@ -284,9 +300,18 @@ public class ViewControl : MonoBehaviour {
 		//myPlayer.ChangePosition(props.posture);
 		//notMyPlayer.IncreaseTempDefence(props.defence);
 		//notMyPlayer.DamageStamina(props.stamina);
-		
+		yield return new WaitForSeconds(5);
+
+		foreach(var c in playedCardsNames)
+		{
+			GameObject.Find(c).GetComponent<Transform>().localPosition = new Vector3(0, 0, 0);
+			GameObject.Find(c).GetComponent<Transform>().transform.localEulerAngles = new Vector3(0, 0, 0);
+		}
+
 		player1SelectedCardProperties.Clear();
 		player2SelectedCardProperties.Clear();
+
+
 		//myPlayer.ResetTempDefence();
 		//notMyPlayer.ResetTempDefence();
 		this.playerView.RPC("ResetTempDefence", PhotonTargets.All);
