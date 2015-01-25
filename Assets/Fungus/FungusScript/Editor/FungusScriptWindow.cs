@@ -8,9 +8,7 @@ namespace Fungus
 {
 	public class FungusScriptWindow : EditorWindow
 	{
-		static bool locked = false;
 		static GUIStyle lockButtonStyle;
-		static FungusScript activeFungusScript;
 
 		public static List<Sequence> deleteList = new List<Sequence>();
 
@@ -20,14 +18,15 @@ namespace Fungus
 		// so we just implement dragging ourselves.
 		protected int dragWindowId = -1;
 		protected Vector2 startDragPosition;
-		protected Sequence selectedSequence;
 
-		protected const float minZoomValue = 0.5f;
+		protected const float minZoomValue = 0.25f;
 		protected const float maxZoomValue = 1f;
 
-		// Set this flag to tell the context menu to appear.
-		// The context menu is modal, so we need to defer displaying it if the background needs to be repainted
-		public static bool showContextMenu;
+		protected GUIStyle nodeStyle = new GUIStyle();
+
+		protected static SequenceInspector sequenceInspector;
+
+		public const float playIconFadeTime = 0.5f;
 
 		[MenuItem("Window/Fungus Script")]
 	    static void Init()
@@ -35,37 +34,65 @@ namespace Fungus
 	        GetWindow(typeof(FungusScriptWindow), false, "Fungus Script");
 	    }
 
-		// Implementing this method causes the padlock image to display on the window
-		// https://leahayes.wordpress.com/2013/04/30/adding-the-little-padlock-button-to-your-editorwindow/#more-455
-		protected virtual void ShowButton(Rect position) {
-			if (lockButtonStyle == null)
-			{
-				lockButtonStyle = "IN LockButton";
-			}
-			locked = GUI.Toggle(position, locked, GUIContent.none, lockButtonStyle);
+		protected virtual void OnEnable()
+		{
+			// All sequence nodes use the same GUIStyle, but with a different background
+			nodeStyle.border.left = 20;
+			nodeStyle.border.right = 20;
+			nodeStyle.border.top = 5;
+			nodeStyle.border.bottom = 5;
+			nodeStyle.padding.left = 20;
+			nodeStyle.padding.right = 20;
+			nodeStyle.padding.top = 5;
+			nodeStyle.padding.bottom = 5;
+			nodeStyle.contentOffset = Vector2.zero;
+			nodeStyle.alignment = TextAnchor.MiddleCenter;
+			nodeStyle.wordWrap = true;
 		}
 
-		public virtual void OnInspectorUpdate()
+		protected virtual void OnInspectorUpdate()
 		{
+			// Ensure the Sequence Inspector is always showing the currently selected sequence
+			FungusScript fungusScript = GetFungusScript();
+			if (fungusScript == null)
+			{
+				return;
+			}
+
+			if (fungusScript.selectedSequence != null)
+			{
+			    if (sequenceInspector == null)
+				{
+					ShowSequenceInspector(fungusScript);
+				}
+				sequenceInspector.sequence = fungusScript.selectedSequence;
+			}
+
 			Repaint();
 		}
 
 		static public FungusScript GetFungusScript()
 		{
-			if (locked && activeFungusScript != null)
+			// Using a temp hidden object to track the active Fungus Script across 
+			// serialization / deserialization when playing the game in the editor.
+			FungusState fungusState = GameObject.FindObjectOfType<FungusState>();
+			if (fungusState == null)
 			{
-				return activeFungusScript;
+				GameObject go = new GameObject("_FungusState");
+				go.hideFlags = HideFlags.HideInHierarchy;
+				fungusState = go.AddComponent<FungusState>();
 			}
-
-			locked = false;
 
 			if (Selection.activeGameObject != null)
 			{
-				activeFungusScript = Selection.activeGameObject.GetComponent<FungusScript>();
-				return activeFungusScript;
+				FungusScript fs = Selection.activeGameObject.GetComponent<FungusScript>();
+				if (fs != null)
+				{
+					fungusState.selectedFungusScript = fs;
+				}
 			}
 
-			return null;
+			return fungusState.selectedFungusScript;
 		}
 
 		protected virtual void OnGUI()
@@ -80,29 +107,32 @@ namespace Fungus
 			// Delete any scheduled objects
 			foreach (Sequence deleteSequence in deleteList)
 			{
+				bool isSelected = (fungusScript.selectedSequence == deleteSequence);
+
 				foreach (Command command in deleteSequence.commandList)
 				{
 					Undo.DestroyObjectImmediate(command);
 				}
 				
 				Undo.DestroyObjectImmediate(deleteSequence);
-				fungusScript.selectedSequence = null;
 				fungusScript.ClearSelectedCommands();
+
+				if (isSelected)
+				{
+					// Revert to showing properties for the Fungus Script
+					Selection.activeGameObject = fungusScript.gameObject;
+				}
 			}
 			deleteList.Clear();
 
 			DrawScriptView(fungusScript);
-			DrawControls(fungusScript);
+			DrawOverlay(fungusScript);
 
-			if (Event.current.type == EventType.Repaint &&
-				showContextMenu)
-			{
-				ShowContextMenu();
-				showContextMenu = false;
-			}
+			// Redraw on next frame to get crisp refresh rate
+			Repaint();
 		}
 
-		protected virtual void DrawControls(FungusScript fungusScript)
+		protected virtual void DrawOverlay(FungusScript fungusScript)
 		{
 			GUILayout.Space(8);
 			
@@ -116,10 +146,47 @@ namespace Fungus
 				                                      50 - fungusScript.scrollPos.y);
 				CreateSequence(fungusScript, newNodePosition);
 			}
-			
-			GUILayout.FlexibleSpace();
+
+			GUILayout.Space(8);
 
 			fungusScript.zoom = GUILayout.HorizontalSlider(fungusScript.zoom, minZoomValue, maxZoomValue, GUILayout.Width(100));
+
+			GUILayout.FlexibleSpace();
+
+			GUILayout.EndHorizontal();
+
+			GUILayout.FlexibleSpace();
+
+			GUILayout.BeginHorizontal();
+
+			GUILayout.BeginVertical(GUILayout.Width(300));
+		
+			GUILayout.FlexibleSpace();
+
+			fungusScript.variablesScrollPos = GUILayout.BeginScrollView(fungusScript.variablesScrollPos, GUILayout.MaxHeight(position.height * 0.75f));
+
+			GUILayout.FlexibleSpace();
+
+			GUILayout.Space(8);
+
+			FungusScriptEditor fungusScriptEditor = Editor.CreateEditor (fungusScript) as FungusScriptEditor;
+			fungusScriptEditor.DrawVariablesGUI();
+			DestroyImmediate(fungusScriptEditor);
+
+			GUILayout.EndScrollView();
+
+			GUILayout.EndVertical();
+
+			GUILayout.FlexibleSpace();
+
+			GUILayout.BeginVertical();
+			GUILayout.FlexibleSpace();
+			GUILayout.Label(fungusScript.name, EditorStyles.whiteBoldLabel);
+			if (fungusScript.description.Length > 0)
+			{
+				GUILayout.Label(fungusScript.description, EditorStyles.whiteLargeLabel);
+			}
+			GUILayout.EndVertical();
 
 			GUILayout.EndHorizontal();
 		}
@@ -148,12 +215,12 @@ namespace Fungus
 			if (Event.current.button == 0 && 
 				Event.current.type == EventType.MouseDown)
 			{
-				selectedSequence = fungusScript.selectedSequence;
 				fungusScript.selectedSequence = null;
 				if (!EditorGUI.actionKey)
 				{
 					fungusScript.ClearSelectedCommands();
 				}
+				Selection.activeGameObject = fungusScript.gameObject;
 			}
 
 			// Draw connections
@@ -176,13 +243,17 @@ namespace Fungus
 			{
 				Sequence sequence = sequences[i];
 
-				// Hack to support legacy design where sequences were child gameobjects (will be removed soon)
-				sequence.UpdateSequenceName();
+				float nodeWidthA = nodeStyle.CalcSize(new GUIContent(sequence.sequenceName)).x + 10;
+				float nodeWidthB = 0f;
+				if (sequence.eventHandler != null)
+				{
+					nodeWidthB = nodeStyle.CalcSize(new GUIContent(sequence.eventHandler.GetSummary())).x + 10;
+				}
 
-				sequence.nodeRect.height = CalcRectHeight(sequence.commandList.Count);
+				sequence.nodeRect.width = Mathf.Max(Mathf.Max(nodeWidthA, nodeWidthB), 120);
+				sequence.nodeRect.height = 40;
 
-				if (!Application.isPlaying &&
-				    Event.current.button == 0)
+				if (Event.current.button == 0)
 				{
 					if (Event.current.type == EventType.MouseDrag && dragWindowId == i)
 					{
@@ -218,6 +289,43 @@ namespace Fungus
 			}
 
 			EndWindows();
+
+			// Draw play icons beside all executing sequences
+			if (Application.isPlaying)
+			{
+				foreach (Sequence s in sequences)
+				{
+					if (s.IsExecuting())
+					{
+						s.executingIconTimer = playIconFadeTime;
+					}
+
+					if (s.executingIconTimer > 0f)
+					{
+						s.executingIconTimer = Mathf.Max(s.executingIconTimer - Time.deltaTime, 0f);
+
+						Rect rect = new Rect(s.nodeRect);
+
+						rect.x += fungusScript.scrollPos.x - 37;
+						rect.y += fungusScript.scrollPos.y + 3;
+						rect.width = 34;
+						rect.height = 34;
+
+						if (!s.IsExecuting() && s.executingIconTimer < playIconFadeTime)
+						{
+							float alpha = s.executingIconTimer / playIconFadeTime;
+							GUI.color = new Color(1f, 1f, 1f, alpha); 
+						}
+
+						if (GUI.Button(rect, FungusEditorResources.texPlayBig as Texture, new GUIStyle()))
+						{
+							SelectSequence(fungusScript, s);
+						}
+
+						GUI.color = Color.white;
+					}
+				}
+			}
 
 			// Right click to drag view
 			if (Event.current.button == 1 && Event.current.type == EventType.MouseDrag)
@@ -263,113 +371,34 @@ namespace Fungus
 				x += gridSize;
 			}
 			
-			float y = fungusScript.scrollPos.y % gridSize;
+			float y = (fungusScript.scrollPos.y % gridSize);
 			while (y < height)
 			{
-				GLDraw.DrawLine(new Vector2(0, y), new Vector2(width, y), color, 1f);
+				if (y >= 0)
+				{
+					GLDraw.DrawLine(new Vector2(0, y), new Vector2(width, y), color, 1f);
+				}
 				y += gridSize;
 			}
 		}
 
-		/*
-		protected virtual void ResizeViews(FungusScript fungusScript)
+		protected virtual void SelectSequence(FungusScript fungusScript, Sequence sequence)
 		{
-			cursorChangeRect = new Rect(this.position.width - fungusScript.commandViewWidth, 0, 4f, this.position.height);
-
-			GUI.color = Color.grey;
-			GUI.DrawTexture(cursorChangeRect, EditorGUIUtility.whiteTexture);
-			GUI.color = Color.white;
-			EditorGUIUtility.AddCursorRect(cursorChangeRect, MouseCursor.ResizeHorizontal);
-			
-			if (Event.current.type == EventType.mouseDown && cursorChangeRect.Contains(Event.current.mousePosition))
+			// Select the sequence and also select currently executing command
+			ShowSequenceInspector(fungusScript);
+			fungusScript.selectedSequence = sequence;
+			fungusScript.ClearSelectedCommands();
+			if (sequence.activeCommand != null)
 			{
-				resize = true;
-			}
-			if (resize)
-			{
-				fungusScript.commandViewWidth = this.position.width - Event.current.mousePosition.x;
-				fungusScript.commandViewWidth = Mathf.Max(minViewWidth, fungusScript.commandViewWidth);
-				fungusScript.commandViewWidth = Mathf.Min(this.position.width - minViewWidth, fungusScript.commandViewWidth);
-			}
-			if(Event.current.type == EventType.MouseUp)
-			{
-				resize = false;        
+				fungusScript.AddSelectedCommand(sequence.activeCommand);
 			}
 		}
-
-		protected virtual void DrawSequenceView(FungusScript fungusScript)
-		{
-			GUILayout.Space(5);
-
-			fungusScript.commandScrollPos = GUILayout.BeginScrollView(fungusScript.commandScrollPos);
-
-			EditorGUILayout.BeginVertical();
-
-			GUILayout.Box("Sequence", GUILayout.ExpandWidth(true));
-
-			GUILayout.BeginHorizontal();
-			
-			if (fungusScript.selectedSequence == null)
-			{
-				GUILayout.FlexibleSpace();
-			}
-			
-			if (GUILayout.Button(fungusScript.selectedSequence == null ? "Create Sequence" : "Create", 
-			                     fungusScript.selectedSequence == null ?  EditorStyles.miniButton : EditorStyles.miniButtonLeft))
-			{
-				Vector2 newPosition;
-				if (fungusScript.selectedSequence == null)
-				{
-					newPosition = newNodePosition;
-				}
-				else
-				{
-					Rect selectedRect = fungusScript.selectedSequence.nodeRect;
-					newPosition = new Vector2(selectedRect.position.x + selectedRect.width + 20, selectedRect.y);
-				}
-
-				CreateSequence(fungusScript, newPosition);
-			}
-			
-			if (fungusScript.selectedSequence == null)
-			{
-				GUILayout.FlexibleSpace();
-			}
-			else
-			{
-				if (GUILayout.Button("Delete", EditorStyles.miniButtonMid))
-				{
-					DeleteSequence(fungusScript, fungusScript.selectedSequence);
-				}
-				if (GUILayout.Button("Duplicate", EditorStyles.miniButtonRight))
-				{
-					DuplicateSequence(fungusScript, fungusScript.selectedSequence);
-				}
-			}
-			
-			GUILayout.EndHorizontal();
-
-			if (fungusScript.selectedSequence != null)
-			{
-				EditorGUILayout.Separator();
-
-				SequenceEditor sequenceEditor = Editor.CreateEditor(fungusScript.selectedSequence) as SequenceEditor;
-				sequenceEditor.DrawSequenceGUI(fungusScript);
-				DestroyImmediate(sequenceEditor);
-
-				GUILayout.FlexibleSpace();
-			}
-
-			EditorGUILayout.EndVertical();
-
-			GUILayout.EndScrollView();
-		}
-		*/
-
+		
 		public static Sequence CreateSequence(FungusScript fungusScript, Vector2 position)
 		{
 			Sequence newSequence = fungusScript.CreateSequence(position);
 			Undo.RegisterCreatedObjectUndo(newSequence, "New Sequence");
+			ShowSequenceInspector(fungusScript);
 			fungusScript.selectedSequence = newSequence;
 			fungusScript.ClearSelectedCommands();
 
@@ -384,7 +413,6 @@ namespace Fungus
 			}
 			
 			Undo.DestroyObjectImmediate(sequence);
-			fungusScript.selectedSequence = null;
 			fungusScript.ClearSelectedCommands();
 		}
 
@@ -394,13 +422,11 @@ namespace Fungus
 			FungusScript fungusScript = sequence.GetFungusScript();
 								
 			// Select sequence when node is clicked
-			if (!Application.isPlaying &&
-			    (Event.current.button == 0 || Event.current.button == 1) && 
-		    	(Event.current.type == EventType.MouseDown))
+			if (Event.current.button == 0 && 
+		    	Event.current.type == EventType.MouseDown)
 			{
 				// Check if might be start of a window drag
-				if (Event.current.button == 0 &&
-				    Event.current.mousePosition.y < 26)
+				if (Event.current.button == 0)
 				{
 					dragWindowId = windowId;
 					startDragPosition.x = sequence.nodeRect.x;
@@ -410,54 +436,70 @@ namespace Fungus
 				if (windowId < windowSequenceMap.Count)
 				{
 					Undo.RecordObject(fungusScript, "Select");
-					if (sequence != selectedSequence || !EditorGUI.actionKey)
-					{
-						int commandIndex = CalcCommandIndex(Event.current.mousePosition.y);
-						if (commandIndex < sequence.commandList.Count &&
-						    fungusScript.selectedCommands.Contains(sequence.commandList[commandIndex]))
-						{
-							// Right clicking on an already selected command does not clear the selected list
-						}
-						else
-						{
-							fungusScript.ClearSelectedCommands();
-						}
-					}
 
-					if (selectedSequence != sequence &&
-					    Event.current.mousePosition.x > sequence.nodeRect.width - 30f)
-					{
-						Event.current.Use();
-					}
+					SelectSequence(fungusScript, sequence);
 
-					fungusScript.selectedSequence = sequence;
 					GUIUtility.keyboardControl = 0; // Fix for textarea not refeshing (change focus)
 				}
 			}
 
-			if (fungusScript.selectedSequence == sequence ||
-			    fungusScript.executingSequence == sequence)
-			{
-				GUI.backgroundColor = Color.green;				
-				Rect highlightRect = new Rect(0, 0, sequence.nodeRect.width, 24);
-				GUIStyle highlightStyle = new GUIStyle();
-				highlightStyle.normal.background = FungusEditorResources.texCommandBackground;
-				highlightStyle.border.top = 1;
-				highlightStyle.border.bottom = 1;
-				highlightStyle.border.left = 1;
-				highlightStyle.border.right = 1;
+			bool selected = (fungusScript.selectedSequence == sequence);
 
-				GUI.Box(highlightRect, "", highlightStyle);
-				GUI.backgroundColor = Color.white;
+			GUIStyle nodeStyleCopy = new GUIStyle(nodeStyle);
+
+			if (sequence.eventHandler != null)
+			{
+				nodeStyleCopy.normal.background = selected ? FungusEditorResources.texEventNodeOn : FungusEditorResources.texEventNodeOff;
+			}
+			else
+			{
+				// Count the number of unique connections (excluding self references)
+				List<Sequence> uniqueList = new List<Sequence>();
+				List<Sequence> connectedSequences = sequence.GetConnectedSequences();
+				foreach (Sequence connectedSequence in connectedSequences)
+				{
+					if (connectedSequence == sequence ||
+					    uniqueList.Contains(connectedSequence))
+					{
+						continue;
+					}
+					uniqueList.Add(connectedSequence);
+				}
+
+				if (uniqueList.Count > 1)
+				{
+					nodeStyleCopy.normal.background = selected ? FungusEditorResources.texChoiceNodeOn : FungusEditorResources.texChoiceNodeOff;
+				}
+				else
+				{
+					nodeStyleCopy.normal.background = selected ? FungusEditorResources.texProcessNodeOn : FungusEditorResources.texProcessNodeOff;
+				}
 			}
 
-			GUILayout.BeginVertical();
+			// Show event handler name, or a custom summary if one is provided
+			string nodeName = "";
+			if (sequence.eventHandler != null)
+			{
+				string handlerSummary = sequence.eventHandler.GetSummary();
+				nodeName = "(" + handlerSummary + ")\n";
+			}
+			nodeName += sequence.sequenceName;
 
-			SequenceEditor sequenceEditor = Editor.CreateEditor(sequence) as SequenceEditor;
-			sequenceEditor.DrawCommandListGUI(sequence.GetFungusScript());
-			DestroyImmediate(sequenceEditor);
+			GUILayout.Box(nodeName, nodeStyleCopy, GUILayout.Width(sequence.nodeRect.width), GUILayout.Height(sequence.nodeRect.height));
+			if (sequence.description.Length > 0)
+			{
+				GUILayout.Label(sequence.description, EditorStyles.whiteLabel);
+			}
 
-			GUILayout.EndVertical();
+			if (Event.current.type == EventType.ContextClick)
+			{
+				GenericMenu menu = new GenericMenu ();
+				
+				menu.AddItem(new GUIContent ("Duplicate"), false, DuplicateSequence, sequence);
+				menu.AddItem(new GUIContent ("Delete"), false, DeleteSequence, sequence);
+
+				menu.ShowAsContext();			
+			}
 	    }
 
 		protected virtual void DrawConnections(FungusScript fungusScript, Sequence sequence, bool highlightedOnly)
@@ -502,19 +544,17 @@ namespace Fungus
 				foreach (Sequence sequenceB in connectedSequences)
 				{
 					if (sequenceB == null ||
+					    sequence == sequenceB ||
 					    sequenceB.GetFungusScript() != fungusScript)
 					{
 						continue;
 					}
 
 					Rect startRect = new Rect(sequence.nodeRect);
-					startRect.y += CalcRectHeight(sequence.commandList.Count);
-					startRect.height = 0;
 					startRect.x += fungusScript.scrollPos.x;
 					startRect.y += fungusScript.scrollPos.y;
 
 					Rect endRect = new Rect(sequenceB.nodeRect);
-					endRect.height = 22;
 					endRect.x += fungusScript.scrollPos.x;
 					endRect.y += fungusScript.scrollPos.y;
 
@@ -526,15 +566,17 @@ namespace Fungus
 		protected virtual void DrawRectConnection(Rect rectA, Rect rectB, bool highlight)
 		{
 			Vector2[] pointsA = new Vector2[] {
-				new Vector2(rectA.xMin, rectA.center.y),
-				new Vector2(rectA.xMin + rectA.width / 2, rectA.yMax + 15),
-				new Vector2(rectA.xMax, rectA.center.y) 
+				new Vector2(rectA.xMin + 5, rectA.center.y),
+				new Vector2(rectA.xMin + rectA.width / 2, rectA.yMin + 2),
+				new Vector2(rectA.xMin + rectA.width / 2, rectA.yMax - 2),
+				new Vector2(rectA.xMax - 5, rectA.center.y) 
 			};
 
 			Vector2[] pointsB = new Vector2[] {
-				new Vector2(rectB.xMin, rectB.center.y + 4),
-				new Vector2(rectB.xMin + rectB.width / 2, rectB.yMin),
-				new Vector2(rectB.xMax, rectB.center.y + 4)
+				new Vector2(rectB.xMin + 5, rectB.center.y),
+				new Vector2(rectB.xMin + rectB.width / 2, rectB.yMin + 2),
+				new Vector2(rectB.xMin + rectB.width / 2, rectB.yMax - 2),
+				new Vector2(rectB.xMax - 5, rectB.center.y)
 			};
 
 			Vector2 pointA = Vector2.zero;
@@ -570,257 +612,27 @@ namespace Fungus
 			GUI.Label(dotBRect, "", new GUIStyle("U2D.dragDotActive"));
 		}
 
-		protected virtual float CalcRectHeight(int numCommands)
+		public static void DeleteSequence(object obj)
 		{
-			return (numCommands * 20) + 34;
-		}
-
-		protected virtual int CalcCommandIndex(float mouseY)
-		{
-			return Math.Max(0, (int)(mouseY - 34 + 7) / 20);
-		}
-
-		public static void ShowContextMenu()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null)
-			{
-				return;
-			}
-
-			bool showCut = false;
-			bool showCopy = false;
-			bool showDelete = false;
-			bool showPaste = false;
-			
-			if (fungusScript.selectedCommands.Count > 0)
-			{
-				showCut = true;
-				showCopy = true;
-				showDelete = true;
-			}
-			
-			CommandCopyBuffer commandCopyBuffer = CommandCopyBuffer.GetInstance();
-			
-			if (commandCopyBuffer.HasCommands())
-			{
-				showPaste = true;
-			}
-			
-			GenericMenu commandMenu = new GenericMenu();
-			
-			if (showCut)
-			{
-				commandMenu.AddItem (new GUIContent ("Cut"), false, Cut);
-			}
-			else
-			{
-				commandMenu.AddDisabledItem(new GUIContent ("Cut"));
-			}
-			
-			if (showCopy)
-			{
-				commandMenu.AddItem (new GUIContent ("Copy"), false, Copy);
-			}
-			else
-			{
-				commandMenu.AddDisabledItem(new GUIContent ("Copy"));
-			}
-			
-			if (showPaste)
-			{
-				commandMenu.AddItem (new GUIContent ("Paste"), false, Paste);
-			}
-			else
-			{
-				commandMenu.AddDisabledItem(new GUIContent ("Paste"));
-			}
-			
-			if (showDelete)
-			{
-				commandMenu.AddItem (new GUIContent ("Delete"), false, Delete);
-			}
-			else
-			{
-				commandMenu.AddDisabledItem(new GUIContent ("Delete"));
-			}
-			
-			commandMenu.AddSeparator("");
-			
-			commandMenu.AddItem (new GUIContent ("Select All"), false, SelectAll);
-			commandMenu.AddItem (new GUIContent ("Select None"), false, SelectNone);
-			
-			commandMenu.AddSeparator("");
-			
-			commandMenu.AddItem (new GUIContent ("Delete Sequence"), false, DeleteSequence);
-			commandMenu.AddItem (new GUIContent ("Duplicate Sequence"), false, DuplicateSequence);
-			
-			commandMenu.ShowAsContext();
+			Sequence sequence = obj as Sequence;
+			FungusScriptWindow.deleteList.Add(sequence);
 		}
 		
-		protected static void SelectAll()
+		protected static void DuplicateSequence(object obj)
 		{
 			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
+			Sequence sequence = obj as Sequence;
 
-			fungusScript.ClearSelectedCommands();
-			Undo.RecordObject(fungusScript, "Select All");
-			foreach (Command command in fungusScript.selectedSequence.commandList)
-			{
-				fungusScript.AddSelectedCommand(command);
-			}
-		}
-		
-		protected static void SelectNone()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
+			Vector2 newPosition = new Vector2(sequence.nodeRect.position.x + 
+			                                  sequence.nodeRect.width + 20, 
+			                                  sequence.nodeRect.y);
 
-			Undo.RecordObject(fungusScript, "Select None");
-			fungusScript.ClearSelectedCommands();
-		}
-		
-		protected static void Cut()
-		{
-			Copy();
-			Delete();
-		}
-		
-		protected static void Copy()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
-
-			CommandCopyBuffer commandCopyBuffer = CommandCopyBuffer.GetInstance();
-			commandCopyBuffer.Clear();
-
-			foreach (Command command in fungusScript.selectedCommands)
-			{
-				System.Type type = command.GetType();
-				Command newCommand = Undo.AddComponent(commandCopyBuffer.gameObject, type) as Command;
-				System.Reflection.FieldInfo[] fields = type.GetFields();
-				foreach (System.Reflection.FieldInfo field in fields)
-				{
-					field.SetValue(newCommand, field.GetValue(command));
-				}
-			}
-		}
-		
-		protected static void Paste()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
-
-			CommandCopyBuffer commandCopyBuffer = CommandCopyBuffer.GetInstance();
-
-			// Find where to paste commands in sequence (either at end or after last selected command)
-			int pasteIndex = fungusScript.selectedSequence.commandList.Count;
-			if (fungusScript.selectedCommands.Count > 0)
-			{
-				for (int i = 0; i < fungusScript.selectedSequence.commandList.Count; ++i)
-				{
-					Command command = fungusScript.selectedSequence.commandList[i];
-					
-					foreach (Command selectedCommand in fungusScript.selectedCommands)
-					{
-						if (command == selectedCommand)
-						{
-							pasteIndex = i + 1;
-						}
-					}
-				}
-			}
-			
-			foreach (Command command in commandCopyBuffer.GetCommands())
-			{
-				System.Type type = command.GetType();
-				Command newCommand = Undo.AddComponent(fungusScript.selectedSequence.gameObject, type) as Command;
-				System.Reflection.FieldInfo[] fields = type.GetFields();
-				foreach (System.Reflection.FieldInfo field in fields)
-				{
-					field.SetValue(newCommand, field.GetValue(command));
-				}
-				
-				Undo.RecordObject(fungusScript.selectedSequence, "Paste");
-				fungusScript.selectedSequence.commandList.Insert(pasteIndex++, newCommand);
-			}
-		}
-		
-		protected static void Delete()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
-
-			for (int i = fungusScript.selectedSequence.commandList.Count - 1; i >= 0; --i)
-			{
-				Command command = fungusScript.selectedSequence.commandList[i];
-				foreach (Command selectedCommand in fungusScript.selectedCommands)
-				{
-					if (command == selectedCommand)
-					{
-						Undo.RecordObject(fungusScript.selectedSequence, "Delete");
-						fungusScript.selectedSequence.commandList.RemoveAt(i);
-						Undo.DestroyObjectImmediate(command);
-						
-						break;
-					}
-				}
-			}
-			
-			Undo.RecordObject(fungusScript, "Delete");
-			fungusScript.ClearSelectedCommands();
-			fungusScript.selectedSequence = null;
-		}
-		
-		public static void DeleteSequence()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
-
-			FungusScriptWindow.deleteList.Add(fungusScript.selectedSequence);
-		}
-		
-		protected static void DuplicateSequence()
-		{
-			FungusScript fungusScript = GetFungusScript();
-			if (fungusScript == null ||
-			    fungusScript.selectedSequence == null)
-			{
-				return;
-			}
-
-			Vector2 newPosition = new Vector2(fungusScript.selectedSequence.nodeRect.position.x + 
-			                                  fungusScript.selectedSequence.nodeRect.width + 20, 
-			                                  fungusScript.selectedSequence.nodeRect.y);
-
-			Sequence oldSequence = fungusScript.selectedSequence;
+			Sequence oldSequence = sequence;
 
 			Sequence newSequence = FungusScriptWindow.CreateSequence(fungusScript, newPosition);
-			newSequence.sequenceName = oldSequence.sequenceName + " (Copy)";
+			newSequence.sequenceName = fungusScript.GetUniqueSequenceKey(oldSequence.sequenceName + " (Copy)");
+
+			Undo.RecordObject(newSequence, "Duplicate Sequence");
 
 			foreach (Command command in oldSequence.commandList)
 			{
@@ -833,7 +645,35 @@ namespace Fungus
 				}
 				newSequence.commandList.Add(newCommand);
 			}
+
+			if (oldSequence.eventHandler != null)
+			{
+				EventHandler eventHandler = oldSequence.eventHandler;
+				System.Type type = eventHandler.GetType();
+				EventHandler newEventHandler = Undo.AddComponent(fungusScript.gameObject, type) as EventHandler;
+				System.Reflection.FieldInfo[] fields = type.GetFields();
+				foreach (System.Reflection.FieldInfo field in fields)
+				{
+					field.SetValue(newEventHandler, field.GetValue(eventHandler));
+				}
+				newEventHandler.parentSequence = newSequence;
+				newSequence.eventHandler = newEventHandler;
+			}
 		}
 
+		protected static void ShowSequenceInspector(FungusScript fungusScript)
+		{
+			if (sequenceInspector == null)
+			{
+				// Create a Scriptable Object with a custom editor which we can use to inspect the selected sequence.
+				// Editors for Scriptable Objects display using the full height of the inspector window.
+				sequenceInspector = ScriptableObject.CreateInstance<SequenceInspector>() as SequenceInspector;
+				sequenceInspector.hideFlags = HideFlags.DontSave;
+			}
+
+			Selection.activeObject = sequenceInspector;
+
+			EditorUtility.SetDirty(sequenceInspector);
+		}
 	}
 }

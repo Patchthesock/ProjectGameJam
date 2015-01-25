@@ -5,20 +5,35 @@ using System.Collections.Generic;
 
 namespace Fungus
 {
-
 	[ExecuteInEditMode]
+	[RequireComponent(typeof(FungusScript))]
 	public class Sequence : Node 
 	{
-		public string sequenceName = "New Sequence";
+		public string sequenceName = "Sequence";
 
+		[TextArea(2, 5)]
+		[Tooltip("Description text to display under the sequence node")]
+		public string description = "";
+
+		[Tooltip("Slow down execution in the editor to make it easier to visualise program flow")]
+		public bool runSlowInEditor = true;
+
+		public EventHandler eventHandler;
+
+		[HideInInspector]
 		[System.NonSerialized]
 		public Command activeCommand;
 
+		[HideInInspector]
+		[System.NonSerialized]
+		public float executingIconTimer;
+
+		[HideInInspector]
 		public List<Command> commandList = new List<Command>();
 
 		protected int executionCount;
 
-		protected virtual void Start()
+		protected virtual void Awake()
 		{
 			// Give each child command a reference back to its parent sequence
 			foreach (Command command in commandList)
@@ -56,17 +71,15 @@ namespace Fungus
 			return false;
 		}
 
-		public virtual bool IsRunning()
+		public virtual bool IsExecuting()
 		{
 			FungusScript fungusScript = GetFungusScript();
-
-			if (fungusScript == null ||
-			    fungusScript.executingSequence == null)
+			if (fungusScript == null)
 			{
 				return false;
 			}
 
-			return (fungusScript.executingSequence == this);
+			return (activeCommand != null);
 		}
 
 		public virtual int GetExecutionCount()
@@ -81,8 +94,11 @@ namespace Fungus
 				executionCount++;
 			}
 
+			FungusScript fungusScript = GetFungusScript();
+
 			activeCommand = null;
 			Command nextCommand = null;
+			executingIconTimer = 0.5f;
 
 			bool executeNext = (currentCommand == null);
 			foreach (Command command in commandList)
@@ -93,7 +109,7 @@ namespace Fungus
 				}
 				else if (executeNext)
 				{
-					if (command.enabled)
+					if (command.enabled && command.GetType() != typeof(Comment))
 					{
 						nextCommand = command;
 						break;
@@ -107,26 +123,35 @@ namespace Fungus
 			}
 			else
 			{
-				FungusScript fungusScript = GetFungusScript();
+				if (fungusScript.gameObject.activeInHierarchy)
+				{
+					// Auto select a command in some situations
+					if ((fungusScript.selectedCommands.Count == 0 && currentCommand == null) ||
+						(fungusScript.selectedCommands.Count == 1 && fungusScript.selectedCommands[0] == currentCommand))
+					{
+						fungusScript.ClearSelectedCommands();
+						fungusScript.AddSelectedCommand(nextCommand);
+					}
 
-				if (!fungusScript.settings.runSlowInEditor)
-				{
-					activeCommand = nextCommand;
-					nextCommand.Execute();
-				}
-				else
-				{
-					StartCoroutine(ExecuteAfterDelay(nextCommand, fungusScript.settings.runSlowDuration));
+					if (!runSlowInEditor)
+					{
+						activeCommand = nextCommand;
+						nextCommand.Execute();
+					}
+					else
+					{
+						StartCoroutine(ExecuteAfterDelay(nextCommand, fungusScript.runSlowDuration));
+					}
 				}
 			}
 
 		}
 
-		IEnumerator ExecuteAfterDelay(Command command, float delay)
+		IEnumerator ExecuteAfterDelay(Command nextCommand, float delay)
 		{
-			activeCommand = command;
+			activeCommand = nextCommand;
 			yield return new WaitForSeconds(delay);
-			command.Execute();
+			nextCommand.Execute();
 		}
 
 		public virtual void Stop()
@@ -138,8 +163,6 @@ namespace Fungus
 			}
 
 			activeCommand = null;
-			fungusScript.executingSequence = null;
-			fungusScript.selectedSequence = null;
 			fungusScript.ClearSelectedCommands();
 		}
 
@@ -151,17 +174,6 @@ namespace Fungus
 				command.GetConnectedSequences(ref connectedSequences);
 			}
 			return connectedSequences;
-		}
-
-		// Force set the sequence name for any legacy child sequences.
-		// This is a temporary hack to make it easier to upgrade from earlier versions and will be removed soon.
-		public virtual void UpdateSequenceName()
-		{
-			if (sequenceName == "New Sequence" &&
-			    GetComponent<FungusScript>() == null)
-			{
-				sequenceName = gameObject.name;
-			}
 		}
 	}
 }
