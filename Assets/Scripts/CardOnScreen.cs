@@ -10,11 +10,11 @@ public class CardOnScreen : MonoBehaviour
 	
 	public Image selectedImage;
 	
-	public bool isSelected {get; set;}
+	public bool isSelected;
 
 	public string cardName;
-	
-	CardManager manager;
+
+	public CardManager manager;
 
 	public CardProperties cardProps;
 
@@ -26,7 +26,7 @@ public class CardOnScreen : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		manager = GameObject.Find("CardManager").GetComponent<CardManager>();
+		//manager = GameObject.Find("CardManager").GetComponent<CardManager>();
 		isSelected = false;
 	}
 
@@ -43,7 +43,16 @@ public class CardOnScreen : MonoBehaviour
 	{
 		if(!isSelected)
 		{
-			if(manager.selectedCards.Count < 3)
+			if(!manager.pickToDiscard)
+			{
+				if(manager.selectedCards.Count < 3)
+				{
+					manager.selectedCards.Add(cardProps);
+					isSelected = true;
+					selectedImage.enabled = true;
+				}
+			}
+			else
 			{
 				manager.selectedCards.Add(cardProps);
 				isSelected = true;
@@ -56,6 +65,7 @@ public class CardOnScreen : MonoBehaviour
 			isSelected = false;
 			selectedImage.enabled = false;
 		}
-		
+
+		manager.CheckCardNumbers();
 	}
 }

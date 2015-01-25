@@ -1,11 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+using PhotonHashTable = ExitGames.Client.Photon.Hashtable;
+
 [RequireComponent(typeof(PlayControl))]
 [RequireComponent(typeof(ViewControl))]
+
 
 public class NetworkManager : MonoBehaviour {
 
 	public bool isViewing;
+
+	public bool startGame = false;
+	private string connectionSettings = "1.1";
 	private RoomInfo[] roomsList;
 	private RoomOptions roomOptions;
 	private string roomName;
@@ -13,24 +19,37 @@ public class NetworkManager : MonoBehaviour {
 	
 	void Awake ()
 	{
-		// Connect to Photon
-		PhotonNetwork.ConnectUsingSettings("1");
+		// Connect to Photon Network
+		PhotonNetwork.ConnectUsingSettings(connectionSettings);
 
 		// Set up room requirements.
 		roomName = SystemInfo.deviceUniqueIdentifier;
 		roomOptions = new RoomOptions() { isVisible = true, isOpen = true, 	maxPlayers = 3 };
 
+		PhotonHashTable playerHash;
+
 		// Enable Play control for players.
+		// Or View control for non - players.
 		if(!isViewing)
 		{
 			this.gameObject.GetComponent<PlayControl>().enabled = true;
 			this.gameObject.GetComponent<ViewControl>().enabled = false;
+			playerHash = new PhotonHashTable { { "Viewer", false } };
 		}
 		else
 		{
 			this.gameObject.GetComponent<PlayControl>().enabled = false;
 			this.gameObject.GetComponent<ViewControl>().enabled = true;
+			playerHash = new PhotonHashTable { { "Viewer", true } };
 		}
+		
+		// Set Player Prefs.
+		PhotonNetwork.SetPlayerCustomProperties(playerHash);
+	}
+
+	void Start ()
+	{
+		
 	}
 	
 	void OnJoinedLobby ()
@@ -47,35 +66,25 @@ public class NetworkManager : MonoBehaviour {
 	void OnJoinedRoom ()
 	{	
 		displayRooms = false;
-		GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-		int i = 0;
-		int e = 0;
-
-		// Determine how many players are playing and how many are watching.
-		foreach(GameObject player in players)
-		{
-
-			if(player.GetComponent<Player>().isViewing == false)
-				i++;
-
-			if(player.GetComponent<Player>().isViewing == true)
-				e++;
-
-		}
-
-		// If more than 2 players or more than one view leave current room.
-		if((i >= 2 && isViewing == false) || (e >= 1 && isViewing == true))
-		{
-			PhotonNetwork.LeaveRoom();
-
-			if(isViewing == false)
-				PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
-		}
-
-		Debug.Log("i: " + i + " e: " + e);
 		SpawnPlayer ();
+
+		CheckStartGame();
 	}
 
+	void OnPhotonPlayerConnected(PhotonPlayer other)
+	{
+		if(PhotonNetwork.isMasterClient)
+		{	
+			// If more than 2 players leave current room.
+			if(PlayerCount() > 2 && this.isViewing == false)
+			{
+				PhotonNetwork.CloseConnection(other);
+			}
+		}
+
+		CheckStartGame();
+	}
+	
 	void SpawnPlayer ()
 	{
 		// Only for actually spawning
@@ -85,6 +94,16 @@ public class NetworkManager : MonoBehaviour {
 	void OnReceivedRoomListUpdate()
 	{
 		roomsList = PhotonNetwork.GetRoomList();
+	}
+
+	void OnPhotonDissconnected ()
+	{
+		PhotonNetwork.ConnectUsingSettings(connectionSettings);
+	}
+
+	void OnPhotonPlayerDisconnected ()
+	{
+		Application.LoadLevel("Winning");
 	}
 
 	void OnGUI()
@@ -103,5 +122,30 @@ public class NetworkManager : MonoBehaviour {
 					PhotonNetwork.JoinRoom(roomsList[i].name);
 			}
 		}
+	}
+
+	private void CheckStartGame()
+	{
+		if(PlayerCount() == 2)
+			startGame = true;
+	}
+
+	private int PlayerCount()
+	{
+		PhotonPlayer[] players = PhotonNetwork.playerList;
+		int i = 0;
+		
+		foreach(PhotonPlayer player in players)
+		{
+			PhotonHashTable playerHashTable = player.customProperties;
+			bool isWatching = (bool)playerHashTable["Viewer"];
+			
+			if(!isWatching)
+			{
+				i++;
+			}
+		}
+
+		return i;
 	}
 }
