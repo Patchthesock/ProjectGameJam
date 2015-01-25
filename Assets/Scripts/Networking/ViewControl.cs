@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using PhotonHashTable = ExitGames.Client.Photon.Hashtable;
+using Fungus;
 
 public class ViewControl : MonoBehaviour {
 
@@ -17,6 +18,8 @@ public class ViewControl : MonoBehaviour {
 	public GameObject player;
 	public GameObject otherPlayer;
 
+	private FungusScript sequenceScript;
+
 	private CardsInPlay myInPlay;
 	private CardsInPlay notMyInPlay;
 
@@ -31,6 +34,7 @@ public class ViewControl : MonoBehaviour {
 
 		canvas = GameObject.Find ("Canvas");
 		canvas.SetActive(false);
+		sequenceScript = GameObject.Find("FungusScript").GetComponent<FungusScript>();
 	}
 
 	void Update ()
