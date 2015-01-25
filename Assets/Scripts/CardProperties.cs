@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class CardProperties : MonoBehaviour
 {
 	public Sprite cardImage;
+	public Texture cardImageTexture;
 
 	public string cardName;
 
